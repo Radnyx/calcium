@@ -40,7 +40,7 @@ void Lexer::skipComment() {
     }
 }
 
-bool Lexer::parseIdentifier(Token * const token) {
+bool Lexer::readIdentifier(Token * const token) {
     assert(token != nullptr);
 
     if (eof()) return false;
@@ -56,7 +56,7 @@ bool Lexer::parseIdentifier(Token * const token) {
     return true;
 }
 
-bool Lexer::parseStringLiteral(Token * const token) {
+bool Lexer::readStringLiteral(Token * const token) {
     assert(token != nullptr);
 
     if (eof()) return false;
@@ -83,7 +83,7 @@ bool Lexer::parseStringLiteral(Token * const token) {
     return true;
 }
 
-bool Lexer::parseExact(Token * const token, TokenType type, const std::string & str) {
+bool Lexer::readExact(Token * const token, TokenType type, const std::string & str) {
     assert(token != nullptr);
     
     int startIndex = index;
@@ -112,18 +112,18 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
         Token token;
 
         bool success = 
-            parseExact(&token, UNIT, "unit") || 
-            parseExact(&token, OPEN_PAREN, "(") || 
-            parseExact(&token, CLOSE_PAREN, ")") || 
-            parseExact(&token, OPEN_BRACE, "{") || 
-            parseExact(&token, CLOSE_BRACE, "}") || 
-            parseExact(&token, STAR, "*") || 
-            parseExact(&token, BYTE, "byte") || 
-            parseExact(&token, COLON, ":") || 
-            parseExact(&token, SEMICOLON, ";") || 
-            parseExact(&token, EQUALS, "=") || 
-            parseIdentifier(&token) || 
-            parseStringLiteral(&token);
+            readExact(&token, UNIT, "unit") || 
+            readExact(&token, OPEN_PAREN, "(") || 
+            readExact(&token, CLOSE_PAREN, ")") || 
+            readExact(&token, OPEN_BRACE, "{") || 
+            readExact(&token, CLOSE_BRACE, "}") || 
+            readExact(&token, STAR, "*") || 
+            readExact(&token, BYTE, "byte") || 
+            readExact(&token, COLON, ":") || 
+            readExact(&token, SEMICOLON, ";") || 
+            readExact(&token, EQUALS, "=") || 
+            readIdentifier(&token) || 
+            readStringLiteral(&token);
 
         if (!success) {
             std::cerr << "ERR: invalid token at line " << line << ", column " << column << std::endl;

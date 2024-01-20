@@ -47,9 +47,9 @@ private:
     void advance();
     void skipWhitespace();
     void skipComment();
-    bool parseIdentifier(Token * const token);
-    bool parseStringLiteral(Token * const Token);
-    bool parseExact(Token * const token, TokenType type, const std::string & str);
+    bool readIdentifier(Token * const token);
+    bool readStringLiteral(Token * const Token);
+    bool readExact(Token * const token, TokenType type, const std::string & str);
 };
 
 #endif // LEXER_H
