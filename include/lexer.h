@@ -15,8 +15,8 @@ enum TokenType {
     OPEN_BRACE,
     CLOSE_BRACE,
     SEMICOLON,
-    QUOTE,
-    EQUALS
+    EQUALS,
+    STRING_LITERAL
 };
 
 struct Token {
@@ -48,6 +48,7 @@ private:
     void skipWhitespace();
     void skipComment();
     bool parseIdentifier(Token * const token);
+    bool parseStringLiteral(Token * const Token);
     bool parseExact(Token * const token, TokenType type, const std::string & str);
 };
 

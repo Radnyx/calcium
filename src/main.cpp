@@ -16,14 +16,14 @@ fun main(): unit {
     print(text);
 }
 
-GRAPHIC HELLO WORLD
+GRAPHICS HELLO WORLD
 
 TODO: read https://github.com/KhronosGroup/SPIRV-Guide/tree/master
 
 */
 
 int main(int, char**) {
-    std::string filename = "../examples/test.ca";
+    std::string filename = "examples/test.ca";
     std::ifstream stream(filename);
     if (!stream) {
         std::cerr << "ERR: could not find file " << filename << std::endl;

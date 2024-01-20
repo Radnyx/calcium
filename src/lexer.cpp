@@ -56,7 +56,36 @@ bool Lexer::parseIdentifier(Token * const token) {
     return true;
 }
 
+bool Lexer::parseStringLiteral(Token * const token) {
+    assert(token != nullptr);
+
+    if (eof()) return false;
+    if (get() != '"') return false;
+
+    int startIndex = index;
+    advance();
+
+    token->type = STRING_LITERAL;
+    token->startIndex = index;
+
+    char c;
+    while ((c = get()) != '"') {
+        if (c == '\n') {
+            index = startIndex;
+            return false;
+        }
+        advance();
+    }
+
+    token->endIndex = index;
+    advance();
+
+    return true;
+}
+
 bool Lexer::parseExact(Token * const token, TokenType type, const std::string & str) {
+    assert(token != nullptr);
+    
     int startIndex = index;
 
     token->type = type;
@@ -92,9 +121,9 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
             parseExact(&token, BYTE, "byte") || 
             parseExact(&token, COLON, ":") || 
             parseExact(&token, SEMICOLON, ";") || 
-            parseExact(&token, QUOTE, "\"") || 
             parseExact(&token, EQUALS, "=") || 
-            parseIdentifier(&token);
+            parseIdentifier(&token) || 
+            parseStringLiteral(&token);
 
         if (!success) {
             std::cerr << "ERR: invalid token at line " << line << ", column " << column << std::endl;
