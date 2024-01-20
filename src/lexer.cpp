@@ -1,4 +1,4 @@
-#include "lexer.h"
+#include "../include/lexer.h"
 #include <cassert>
 
 bool Lexer::eof() const {
@@ -24,6 +24,19 @@ void Lexer::skipWhitespace() {
             line++;
             column = 1;
         }
+    }
+
+    skipComment();
+}
+
+void Lexer::skipComment() {
+    if (index < program.size() - 2 && get() == '/' && program[index + 1] == '/') {
+        while (!eof() && get() != '\n') advance();
+        index++;
+        line++;
+        column = 1;
+
+        skipWhitespace();
     }
 }
 
@@ -75,6 +88,12 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
             parseExact(&token, CLOSE_PAREN, ")") || 
             parseExact(&token, OPEN_BRACE, "{") || 
             parseExact(&token, CLOSE_BRACE, "}") || 
+            parseExact(&token, STAR, "*") || 
+            parseExact(&token, BYTE, "byte") || 
+            parseExact(&token, COLON, ":") || 
+            parseExact(&token, SEMICOLON, ";") || 
+            parseExact(&token, QUOTE, "\"") || 
+            parseExact(&token, EQUALS, "=") || 
             parseIdentifier(&token);
 
         if (!success) {
