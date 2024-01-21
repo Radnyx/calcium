@@ -28,6 +28,8 @@ struct Token {
     TokenType type;
     int startIndex;
     int endIndex;
+    int line;
+    int column;
 };
 
 class Lexer {

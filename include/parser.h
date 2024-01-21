@@ -8,22 +8,33 @@
 class Parser {
 public:
     Parser(const std::vector<Token> & tokens);
-    Error parse(std::unique_ptr<AST> & ast); 
+    Error parse(std::vector<std::unique_ptr<AST>> & ast);
+
+    bool eof() const;
+    Token get() const;
 private:
     const std::vector<Token> & tokens;
     int index; // current position in the token list
 
-    bool eof() const;
-    Token get() const;
-
+    /* Returns true if it finds the expected syntax, advances the index.
+        If false, the caller must keep track of the original index. */
     bool expect(TokenType tokenType);
     bool expectIdentifier(Token * token);
     bool expectType(std::unique_ptr<TypeAST> * type);
 
+    /*On failure, these functions return nullptr and restore the index. */
+    std::unique_ptr<BodyAST> parseBody();
+    std::vector<std::unique_ptr<AST>> parseStatementList();
+    std::unique_ptr<AST> parseStatement();
+    std::unique_ptr<ExpressionAST> parseExpression();
+    std::unique_ptr<StringLiteralAST> parseStringLiteral();
+    std::unique_ptr<FunctionCallAST> parseFunctionCall();
+    std::vector<std::unique_ptr<ExpressionAST>> parseExpressionList();
+
+    std::unique_ptr<TypeAST> parseType(); 
     std::unique_ptr<FunctionPrototypeAST> parseFunctionPrototype();
-    bool parseParameter(Token * name, std::unique_ptr<TypeAST> * type);
     std::vector<Parameter> parseParameterList();
-    std::unique_ptr<TypeAST> parseType(); // returns nullptr on failure
+    bool parseParameter(Token * name, std::unique_ptr<TypeAST> * type);
 };
 
 #endif // PARSER_H

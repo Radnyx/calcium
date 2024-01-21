@@ -1,6 +1,5 @@
 fun printf(* byte): int;
 
 fun main(): unit {
-    let text: * byte = "hello world"; // stored globally, referenced here
-    printf(text);
+    printf("hello world");
 }

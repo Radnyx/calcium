@@ -56,6 +56,8 @@ bool Lexer::readIdentifier(Token * const token) {
 
     token->type = IDENTIFIER;
     token->startIndex = index;
+    token->line = line;
+    token->column = column;
 
     advance();
     while (!eof() && isalnum(get())) advance();
@@ -75,6 +77,8 @@ bool Lexer::readStringLiteral(Token * const token) {
 
     token->type = STRING_LITERAL;
     token->startIndex = index;
+    token->line = line;
+    token->column = column;
 
     char c;
     while ((c = get()) != '"') {
@@ -98,6 +102,8 @@ bool Lexer::readExact(Token * const token, TokenType type, const std::string & s
 
     token->type = type;
     token->startIndex = startIndex;
+    token->line = line;
+    token->column = column;
 
     for (char c : str) {
         if (eof() || c != get()) {
@@ -138,7 +144,7 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
 
         if (!success) {
             std::cerr << "ERR: invalid token at line " << line << ", column " << column << std::endl;
-            return INVALID_TOKEN_ERR;
+            return ERR_INVALID_TOKEN;
         }
 
         tokens.push_back(token);
@@ -146,5 +152,5 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
         skipWhitespace();
     }
 
-    return NO_ERR;
+    return ERR_NONE;
 }
