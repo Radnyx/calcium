@@ -5,21 +5,26 @@
 #include "errors.h"
 
 enum TokenType {
+    NULL_TOKEN,
     UNIT,
+    INT,
     BYTE,
     STAR,
     COLON,
+    FUN,
     IDENTIFIER,
     OPEN_PAREN,
     CLOSE_PAREN,
     OPEN_BRACE,
     CLOSE_BRACE,
+    COMMA,
     SEMICOLON,
     EQUALS,
     STRING_LITERAL
 };
 
 struct Token {
+    Token();
     TokenType type;
     int startIndex;
     int endIndex;
@@ -27,11 +32,7 @@ struct Token {
 
 class Lexer {
 public:
-    Lexer(const std::string & program) : program(program) {
-        index = 0;
-        line = 1;
-        column = 1;
-    }
+    Lexer(const std::string & program);
 
     Error tokenize(std::vector<Token> & tokens);
 

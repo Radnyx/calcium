@@ -1,6 +1,14 @@
 #include "../include/lexer.h"
 #include <cassert>
 
+Token::Token() : type(NULL_TOKEN) {}
+
+Lexer::Lexer(const std::string & program) : program(program) {
+    index = 0;
+    line = 1;
+    column = 1;
+}
+
 bool Lexer::eof() const {
     return index >= program.size();
 }
@@ -112,13 +120,16 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
         Token token;
 
         bool success = 
+            readExact(&token, FUN, "fun") || 
             readExact(&token, UNIT, "unit") || 
+            readExact(&token, INT, "int") || 
+            readExact(&token, BYTE, "byte") || 
+            readExact(&token, STAR, "*") || 
             readExact(&token, OPEN_PAREN, "(") || 
             readExact(&token, CLOSE_PAREN, ")") || 
             readExact(&token, OPEN_BRACE, "{") || 
             readExact(&token, CLOSE_BRACE, "}") || 
-            readExact(&token, STAR, "*") || 
-            readExact(&token, BYTE, "byte") || 
+            readExact(&token, COMMA, ",") || 
             readExact(&token, COLON, ":") || 
             readExact(&token, SEMICOLON, ";") || 
             readExact(&token, EQUALS, "=") || 
