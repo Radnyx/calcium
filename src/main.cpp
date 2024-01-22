@@ -3,6 +3,10 @@
 #include <sstream>
 #include <vector>
 #include <cassert>
+#include <map>
+
+#include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
 
 #include "../include/parser.h"
 
@@ -23,7 +27,7 @@ TODO: read https://github.com/KhronosGroup/SPIRV-Guide/tree/master
 */
 
 int main(int, char**) {
-    std::string filename = "../examples/test.ca";
+    std::string filename = "../../examples/test.ca";
     std::ifstream stream(filename);
     if (!stream) {
         std::cerr << "ERR: could not find file " << filename << std::endl;
@@ -34,12 +38,16 @@ int main(int, char**) {
     buffer << stream.rdbuf();
 
     const std::string program = buffer.str();
+    
+    // ============ LEXER ============
+    
     Lexer lexer(program);
     
     std::vector<Token> tokens;
     auto err = lexer.tokenize(tokens);
     if (err != ERR_NONE) return err;
 
+    // ============ PARSER ============
     
     Parser parser(tokens);
 
@@ -54,6 +62,15 @@ int main(int, char**) {
 
         return err;
     }
+
+    // ============ SEMANTIC ANALYSIS ============
+
+    // ============ CODE GENERATION ============
+
+    auto llvmContext = std::make_unique<llvm::LLVMContext>();
+    auto llvmModule = std::make_unique<llvm::Module>("Calcium", *llvmContext);
+    auto irRuilder = std::make_unique<llvm::IRBuilder<>>(*llvmContext);
+    std::map<std::string, llvm::Value *> symbols;
 
     return 0;
 }

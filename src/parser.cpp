@@ -256,7 +256,7 @@ bool Parser::expectIdentifier(Token * token) {
 
 bool Parser::expectType(std::unique_ptr<TypeAST> * type) {
     assert(type != nullptr);
-    *type = std::move(parseType());
+    *type = parseType();
     return *type != nullptr;
 }
 
