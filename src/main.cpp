@@ -3,12 +3,9 @@
 #include <sstream>
 #include <vector>
 #include <cassert>
-#include <map>
-
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
 
 #include "../include/parser.h"
+#include "../include/irgenerator.h"
 
 /*
 SIMPLE HELLO WORLD
@@ -24,7 +21,13 @@ GRAPHICS HELLO WORLD
 
 TODO: read https://github.com/KhronosGroup/SPIRV-Guide/tree/master
 
+Refer to https://github.com/KhronosGroup/SPIRV-Tools/blob/main/docs/syntax.md
+For an API to generate and assembling SPIR-V code.
+
+Follow up on this: https://community.khronos.org/t/is-there-an-api-for-generating-spir-v-assembly/110472
+
 */
+
 
 int main(int, char**) {
     std::string filename = "../../examples/test.ca";
@@ -37,11 +40,12 @@ int main(int, char**) {
     std::stringstream buffer;
     buffer << stream.rdbuf();
 
-    const std::string program = buffer.str();
+    std::string text = buffer.str();
+    Program program(text);
     
     // ============ LEXER ============
     
-    Lexer lexer(program);
+    Lexer lexer(text);
     
     std::vector<Token> tokens;
     auto err = lexer.tokenize(tokens);
@@ -67,10 +71,8 @@ int main(int, char**) {
 
     // ============ CODE GENERATION ============
 
-    auto llvmContext = std::make_unique<llvm::LLVMContext>();
-    auto llvmModule = std::make_unique<llvm::Module>("Calcium", *llvmContext);
-    auto irRuilder = std::make_unique<llvm::IRBuilder<>>(*llvmContext);
-    std::map<std::string, llvm::Value *> symbols;
+    IRGenerator irGenerator(program);
+    irGenerator.generate(ast);
 
     return 0;
 }
