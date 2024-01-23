@@ -1,5 +1,8 @@
 fun printf(* byte): int;
 
+fun foo(test: * byte): unit {}
+
 fun main(): unit {
+    foo("hi");
     printf("hello world");
 }

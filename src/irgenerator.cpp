@@ -1,8 +1,10 @@
 #include "../include/irgenerator.h"
 
-IRGenerator::IRGenerator(Program & program) : program(program) {
-    llvmContext = std::make_unique<llvm::LLVMContext>();
-    llvmModule = std::make_unique<llvm::Module>("Calcium", *llvmContext);
+IRGenerator::IRGenerator(
+    Program & program,
+    std::shared_ptr<llvm::LLVMContext> & llvmContext,
+    std::shared_ptr<llvm::Module> & llvmModule
+) : program(program), llvmContext(llvmContext), llvmModule(llvmModule) {
     irBuilder = std::make_unique<llvm::IRBuilder<>>(*llvmContext);
 }
 

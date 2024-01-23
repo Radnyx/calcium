@@ -6,6 +6,7 @@
 
 #include "../include/parser.h"
 #include "../include/irgenerator.h"
+#include "../include/writer.h"
 
 /*
 SIMPLE HELLO WORLD
@@ -71,8 +72,24 @@ int main(int, char**) {
 
     // ============ CODE GENERATION ============
 
-    IRGenerator irGenerator(program);
+    auto llvmContext = std::make_shared<llvm::LLVMContext>();
+    auto llvmModule = std::make_shared<llvm::Module>("Calcium", *llvmContext);
+
+    IRGenerator irGenerator(program, llvmContext, llvmModule);
     irGenerator.generate(ast);
+
+    // ============ OUTPUT TO OBJECT FILE ============
+
+    std::string outputFilename = filename.substr(0, filename.find_last_of(".")) + ".o";
+
+    Writer writer(llvmModule);
+    err = writer.output(outputFilename);
+
+    if (err != ERR_NONE) {
+        return err;
+    }
+
+    std::cout << "INFO: wrote to \"" << outputFilename << "\"" << std::endl;
 
     return 0;
 }

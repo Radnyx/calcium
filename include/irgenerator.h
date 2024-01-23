@@ -10,14 +10,18 @@
 
 class IRGenerator {
 public:
-    IRGenerator(Program & program);
+    IRGenerator(
+        Program & program,
+        std::shared_ptr<llvm::LLVMContext> & llvmContext,
+        std::shared_ptr<llvm::Module> & llvmModule
+    );
 
     void generate(const std::vector<std::unique_ptr<AST>> & ast);
-private:
+    private:
     const Program & program;
 
-    std::unique_ptr<llvm::LLVMContext> llvmContext;
-    std::unique_ptr<llvm::Module> llvmModule;
+    const std::shared_ptr<llvm::LLVMContext> llvmContext;
+    const std::shared_ptr<llvm::Module> llvmModule;
     std::unique_ptr<llvm::IRBuilder<>> irBuilder;
     std::map<std::string, std::stack<llvm::Value *>> symbols;
 
