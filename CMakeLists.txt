@@ -19,6 +19,7 @@ link_directories(${LLVM_LIBDIR})
 include_directories(${LLVM_INCLUDEDIR})
 
 add_executable(Calcium ${SOURCES})
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "calcium")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

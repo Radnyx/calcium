@@ -32,8 +32,13 @@ Follow up on this: https://community.khronos.org/t/is-there-an-api-for-generatin
 */
 
 
-int main(int, char**) {
-    std::string filename = "../../examples/test.ca";
+int main(int argc, char* argv[]) {
+    if (argc != 2) {
+        std::cerr << "ERR: expected 1 argument, e,g. calcium main.ca" << std::endl;
+        return 1;
+    }
+
+    std::string filename = argv[1];
     std::ifstream stream(filename);
     if (!stream) {
         std::cerr << "ERR: could not find file " << filename << std::endl;

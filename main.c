@@ -1,3 +1,8 @@
+/**
+ * Loads the standard library and executes the calcium code.
+ * TODO: Pack linking this into one command.
+*/
+
 #include <stdio.h>
 
 #ifdef _WIN32
