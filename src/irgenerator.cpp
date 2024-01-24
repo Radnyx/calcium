@@ -31,11 +31,11 @@ void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
 llvm::Type * IRGenerator::generate(Primitive primitive) {
     switch (primitive) {
     case PRIMITIVE_UNIT:
-        return llvm::Type::getInt1Ty(*llvmContext);
-    case PRIMITIVE_INT:
-        return llvm::Type::getInt32Ty(*llvmContext);
+        return irBuilder->getInt1Ty();
     case PRIMITIVE_BYTE:
-        return llvm::Type::getInt8Ty(*llvmContext);
+        return irBuilder->getInt8Ty();
+    case PRIMITIVE_INT:
+        return irBuilder->getInt32Ty();
     }
     return nullptr;
 }
@@ -114,7 +114,16 @@ llvm::Function * IRGenerator::generate(const FunctionDefinitionAST * definition)
     }
 
     generate(definition->body.get());
-    
+
+    // TODO: abstract this and handle explicit return statements
+    auto returnType = definition->prototype->returnType.get();
+    if (
+        returnType->getTypeID() == TYPE_PRIMITIVE && 
+        static_cast<const PrimitiveTypeAST *>(returnType)->primitive == PRIMITIVE_UNIT
+    ) {
+        irBuilder->CreateRet(llvm::ConstantInt::get(*llvmContext, llvm::APInt(1, false)));
+    }
+
     for (auto & arg : function->args()) {
         if (arg.hasName()) {
             symbols[std::string(arg.getName())].pop();
@@ -144,24 +153,7 @@ llvm::Value * IRGenerator::generate(const ExpressionAST * expression) {
     {
         auto stringLiteral = static_cast<const StringLiteralAST *>(expression);
         auto text = program.extract(stringLiteral->text);
-    
-        auto charType = llvm::Type::getInt8Ty(*llvmContext);
-        auto arrayType = llvm::ArrayType::get(charType, text.size() + 1);
-
-        std::vector<llvm::Constant *> data(text.size() + 1);
-        for (size_t i = 0; i < text.size(); i++) {
-            data[i] = llvm::ConstantInt::get(charType, text[i]);
-        }
-
-        data[text.size()] = (llvm::ConstantInt::get(charType, 0));
-
-        auto globalDeclaration = (llvm::GlobalVariable *) llvmModule->getOrInsertGlobal("", arrayType);
-        globalDeclaration->setInitializer(llvm::ConstantArray::get(arrayType, data));
-        globalDeclaration->setConstant(true);
-        globalDeclaration->setLinkage(llvm::GlobalValue::LinkageTypes::PrivateLinkage);
-        globalDeclaration->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
-
-        return llvm::ConstantExpr::getBitCast(globalDeclaration, charType->getPointerTo());
+        return irBuilder->CreateGlobalStringPtr(text);
     }
     case EXPRESSION_FUNCTION_CALL:
     {

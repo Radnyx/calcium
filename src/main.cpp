@@ -9,6 +9,8 @@
 #include "../include/writer.h"
 
 /*
+compile/link in one go: https://discourse.llvm.org/t/compile-to-native/62196/3
+
 SIMPLE HELLO WORLD
 
 fun printf(* byte): int;
