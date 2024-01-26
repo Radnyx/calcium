@@ -1,8 +1,8 @@
 #ifndef WRITER_H
 #define WRITER_H
 #include <iostream>
-#include "llvm/IR/Module.h"
-#include "llvm/Target/TargetMachine.h"
+#include <llvm/IR/Module.h>
+#include <llvm/Target/TargetMachine.h>
 #include "errors.h"
 
 class Writer {

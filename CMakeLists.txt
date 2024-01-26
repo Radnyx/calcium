@@ -18,12 +18,18 @@ execute_process(COMMAND llvm-config "--includedir" OUTPUT_VARIABLE LLVM_INCLUDED
 link_directories(${LLVM_LIBDIR})
 include_directories(${LLVM_INCLUDEDIR})
 
+set(ENV{VULKAN_SDK} "C:/VulkanSDK/1.3.275.0") # TODO, make this portable
+find_package(Vulkan REQUIRED)
+
 add_executable(Calcium ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "calcium")
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
+
+target_include_directories(Calcium PUBLIC "C:/VulkanSDK/1.3.275.0/Include")
+target_link_libraries(Calcium ${Vulkan_LIBRARIES})
 
 target_link_libraries(Calcium ws2_32.lib)
 

@@ -8,19 +8,16 @@
 #include "../include/irgenerator.h"
 #include "../include/writer.h"
 
+#include <vulkan/vulkan.h>
+
 /*
 compile/link in one go: https://discourse.llvm.org/t/compile-to-native/62196/3
 
-SIMPLE HELLO WORLD
-
-fun printf(* byte): int;
-
-fun main(): unit {
-    let text: * byte = "hello world"; // stored globally, referenced here
-    printf(text);
-}
-
 GRAPHICS HELLO WORLD
+
+Vulkan compute:
+- https://www.neilhenning.dev/posts/a-simple-vulkan-compute-example/
+- https://vulkan-tutorial.com/Compute_Shader
 
 TODO: read https://github.com/KhronosGroup/SPIRV-Guide/tree/master
 
@@ -30,7 +27,6 @@ For an API to generate and assembling SPIR-V code.
 Follow up on this: https://community.khronos.org/t/is-there-an-api-for-generating-spir-v-assembly/110472
 
 */
-
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {

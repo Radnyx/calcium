@@ -3,8 +3,8 @@
 #include <memory>
 #include <map>
 #include <stack>
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
 #include "ast.h"
 #include "program.h"
 
