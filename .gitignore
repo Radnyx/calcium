@@ -4,3 +4,4 @@ CMakeFiles/
 
 *.o
 *.exe
+*.spvasm

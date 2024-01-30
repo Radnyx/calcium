@@ -11,7 +11,7 @@ static std::string takeExample(const std::string & text, size_t index) {
     return example;
 }
 
-Token::Token() : type(NULL_TOKEN) {}
+Token::Token() : type(TOK_NULL) {}
 
 Lexer::Lexer(const std::string & program) : program(program) {
     index = 0;
@@ -64,7 +64,7 @@ bool Lexer::readIdentifier(Token * const token) {
     if (eof()) return false;
     if (!isalpha(get())) return false;
 
-    token->type = IDENTIFIER;
+    token->type = TOK_IDENTIFIER;
     token->startIndex = index;
     token->line = line;
     token->column = column;
@@ -104,7 +104,7 @@ bool Lexer::readFloatLiteral(Token * const token) {
         return false;
     }
 
-    token->type = FLOAT_LITERAL;
+    token->type = TOK_FLOAT_LITERAL;
     token->startIndex = startIndex;
     token->line = line;
     token->column = column;
@@ -126,7 +126,7 @@ bool Lexer::readIntLiteral(Token * const token) {
         advance();
     }
 
-    token->type = INT_LITERAL;
+    token->type = TOK_INT_LITERAL;
     token->line = line;
     token->column = column;
     token->endIndex = index;
@@ -164,7 +164,7 @@ bool Lexer::readStringLiteral(Token * const token) {
     
     advance(); // '"'
 
-    token->type = STRING_LITERAL;
+    token->type = TOK_STRING_LITERAL;
     token->startIndex = startIndex;
     token->endIndex = index;
     token->line = line;
@@ -213,30 +213,30 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
         Token token;
 
         bool success = 
-            readExact(&token, FUN, "fun") || 
-            readExact(&token, KER, "ker") || 
+            readExact(&token, TOK_FUN, "fun") || 
+            readExact(&token, TOK_KER, "ker") || 
             // readExact(&token, KERNEL, "Kernel") || 
-            readExact(&token, STRUCT, "struct") || 
-            readExact(&token, UNIT, "unit") || 
-            readExact(&token, INT, "int") || 
-            readExact(&token, BYTE, "byte") || 
-            readExact(&token, BOOL, "bool") || 
+            readExact(&token, TOK_STRUCT, "struct") || 
+            readExact(&token, TOK_UNIT, "unit") || 
+            readExact(&token, TOK_INT, "int") || 
+            readExact(&token, TOK_BYTE, "byte") || 
+            readExact(&token, TOK_BOOL, "bool") || 
             // readExact(&token, VEC2, "vec2") || 
             // readExact(&token, VEC4, "vec4") || 
-            readExact(&token, LET, "let") || 
-            readExact(&token, WHILE, "while") || 
-            readExact(&token, RETURN, "return") || 
-            readExact(&token, STAR, "*") || 
-            readExact(&token, OPEN_PAREN, "(") || 
-            readExact(&token, CLOSE_PAREN, ")") || 
-            readExact(&token, OPEN_BRACE, "{") || 
-            readExact(&token, CLOSE_BRACE, "}") || 
-            readExact(&token, COMMA, ",") || 
-            readExact(&token, COLON, ":") || 
-            readExact(&token, SEMICOLON, ";") || 
-            readExact(&token, EQUALS, "=") || 
-            readExact(&token, NOT, "!") || 
-            readExact(&token, MINUS, "-") || 
+            readExact(&token, TOK_LET, "let") || 
+            readExact(&token, TOK_WHILE, "while") || 
+            readExact(&token, TOK_RETURN, "return") || 
+            readExact(&token, TOK_STAR, "*") || 
+            readExact(&token, TOK_OPEN_PAREN, "(") || 
+            readExact(&token, TOK_CLOSE_PAREN, ")") || 
+            readExact(&token, TOK_OPEN_BRACE, "{") || 
+            readExact(&token, TOK_CLOSE_BRACE, "}") || 
+            readExact(&token, TOK_COMMA, ",") || 
+            readExact(&token, TOK_COLON, ":") || 
+            readExact(&token, TOK_SEMICOLON, ";") || 
+            readExact(&token, TOK_EQUALS, "=") || 
+            readExact(&token, TOK_NOT, "!") || 
+            readExact(&token, TOK_MINUS, "-") || 
             readIdentifier(&token) || 
             readFloatLiteral(&token) ||
             readIntLiteral(&token) ||

@@ -54,7 +54,7 @@ bool Parser::parseFunction(std::unique_ptr<AST> * statement) {
         return false;
     }
 
-    if (get().type == SEMICOLON) {
+    if (get().type == TOK_SEMICOLON) {
         if (isKernel) {
             if (!eof() && error.empty()) {
                 error.token = get();
@@ -82,7 +82,7 @@ bool Parser::parseFunction(std::unique_ptr<AST> * statement) {
 
 bool Parser::parseStruct(std::unique_ptr<AST> * statement) {
     Token name;
-    if (!(expect(STRUCT) && expectIdentifier(&name) && expect(SEMICOLON))) {
+    if (!(expect(TOK_STRUCT) && expectIdentifier(&name) && expect(TOK_SEMICOLON))) {
         return false;
     }
 
@@ -93,14 +93,14 @@ bool Parser::parseStruct(std::unique_ptr<AST> * statement) {
 std::unique_ptr<BodyAST> Parser::parseBody() {
     size_t startIndex = index;
 
-    if (!expect(OPEN_BRACE)) {
+    if (!expect(TOK_OPEN_BRACE)) {
         index = startIndex;
         return nullptr;
     }
 
     auto statements = parseStatementList();
 
-    if (!expect(CLOSE_BRACE)) {
+    if (!expect(TOK_CLOSE_BRACE)) {
         if (!eof() && error.empty()) {
             error.token = get();
             error.message << "missing closing brace, found: \"" <<
@@ -148,7 +148,7 @@ std::unique_ptr<AST> Parser::parseStatement() {
         return nullptr;
     }
 
-    if (requireSemicolon && !expect(SEMICOLON)) {
+    if (requireSemicolon && !expect(TOK_SEMICOLON)) {
         if (index > 0 && !eof() && error.empty()) {
             error.token = tokens[index - 1];
             error.message << "missing semicolon, found: \"" << program.extract(get()) << "\"";
@@ -166,10 +166,10 @@ std::unique_ptr<VariableDefinitionAST> Parser::parseVariableDefinition() {
     Token name;
     std::unique_ptr<TypeAST> type;
     std::unique_ptr<ExpressionAST> expression;
-    bool hasLet = expect(LET);
+    bool hasLet = expect(TOK_LET);
     bool success = hasLet && 
-        expectIdentifier(&name) && expect(COLON) && 
-        expectType(&type) && expect(EQUALS) && 
+        expectIdentifier(&name) && expect(TOK_COLON) && 
+        expectType(&type) && expect(TOK_EQUALS) && 
         expectExpression(&expression);
 
     if (!success) {
@@ -189,7 +189,7 @@ std::unique_ptr<VariableDefinitionAST> Parser::parseVariableDefinition() {
 std::unique_ptr<ReturnAST> Parser::parseReturn() {
     size_t startIndex = index;
     std::unique_ptr<ExpressionAST> expression;
-    bool hasReturn = expect(RETURN);
+    bool hasReturn = expect(TOK_RETURN);
     bool success = hasReturn && expectExpression(&expression);
     if (!success) {
         if (!eof() && hasReturn && error.empty()) {
@@ -208,9 +208,9 @@ std::unique_ptr<ReturnAST> Parser::parseReturn() {
 std::unique_ptr<WhileLoopAST> Parser::parseWhileLoop() {
     size_t startIndex = index;
     std::unique_ptr<ExpressionAST> condition;
-    bool hasWhile = expect(WHILE);
+    bool hasWhile = expect(TOK_WHILE);
     bool success = hasWhile &&
-        expect(OPEN_PAREN) && expectExpression(&condition) && expect(CLOSE_PAREN);
+        expect(TOK_OPEN_PAREN) && expectExpression(&condition) && expect(TOK_CLOSE_PAREN);
 
     if (!success) {
         if (!eof() && hasWhile) {
@@ -244,26 +244,26 @@ std::unique_ptr<ExpressionAST> Parser::parseExpression() {
     expr = parseNotOperation();
     if (expr) return expr;
 
-    expr = parseToken<IntLiteralAST, INT_LITERAL>();
+    expr = parseToken<IntLiteralAST, TOK_INT_LITERAL>();
     if (expr) return expr;
     
-    expr = parseToken<FloatLiteralAST, FLOAT_LITERAL>();
+    expr = parseToken<FloatLiteralAST, TOK_FLOAT_LITERAL>();
     if (expr) return expr;
     
-    expr = parseToken<StringLiteralAST, STRING_LITERAL>();
+    expr = parseToken<StringLiteralAST, TOK_STRING_LITERAL>();
     if (expr) return expr;
 
     expr = parseFunctionCall();
     if (expr) return expr;
 
-    return parseToken<VariableAST, IDENTIFIER>();
+    return parseToken<VariableAST, TOK_IDENTIFIER>();
 }
 
 std::unique_ptr<NotOperationAST> Parser::parseNotOperation() {
     size_t startIndex = index;
 
     std::unique_ptr<ExpressionAST> expression;
-    if (!(expect(NOT) && expectExpression(&expression))) {
+    if (!(expect(TOK_NOT) && expectExpression(&expression))) {
         index = startIndex;
         return nullptr;
     }
@@ -277,14 +277,14 @@ std::unique_ptr<FunctionCallAST> Parser::parseFunctionCall() {
     size_t startIndex = index;
 
     Token name;
-    if (!(expectIdentifier(&name) && expect(OPEN_PAREN))) {
+    if (!(expectIdentifier(&name) && expect(TOK_OPEN_PAREN))) {
         index = startIndex;
         return nullptr;
     }
 
     auto expressions = parseExpressionList();
 
-    if (!expect(CLOSE_PAREN)) {
+    if (!expect(TOK_CLOSE_PAREN)) {
         index = startIndex;
         return nullptr;
     }
@@ -300,7 +300,7 @@ std::vector<std::unique_ptr<ExpressionAST>> Parser::parseExpressionList() {
         expressions.push_back(std::move(expression));
 
         size_t lastIndex = index;
-        if (!expect(COMMA)) {
+        if (!expect(TOK_COMMA)) {
             index = lastIndex;
             break;
         }
@@ -318,15 +318,15 @@ std::unique_ptr<FunctionPrototypeAST> Parser::parseFunctionPrototype(bool isKern
     Token name;
     std::unique_ptr<TypeAST> returnType;
 
-    auto keyword = isKernel ? KER : FUN;
-    if (!(expect(keyword) && expectIdentifier(&name) && expect(OPEN_PAREN))) {
+    auto keyword = isKernel ? TOK_KER : TOK_FUN;
+    if (!(expect(keyword) && expectIdentifier(&name) && expect(TOK_OPEN_PAREN))) {
         index = startIndex;
         return nullptr;
     }
 
     auto parameterList = parseParameterList();
 
-    if (!(expect(CLOSE_PAREN) && expect(COLON) && expectType(&returnType))) {
+    if (!(expect(TOK_CLOSE_PAREN) && expect(TOK_COLON) && expectType(&returnType))) {
         if (!eof() && error.empty()) {
             error.token = get();
             error.message << "unexpected symbol in function prototype: \"" << 
@@ -345,22 +345,22 @@ std::unique_ptr<TypeAST> Parser::parseType() {
 
     auto tok = get();
     switch (tok.type) {
-    case IDENTIFIER:
+    case TOK_IDENTIFIER:
         index++;
         return std::make_unique<StructTypeAST>(tok);
-    case UNIT:
+    case TOK_UNIT:
         index++;
         return std::make_unique<PrimitiveTypeAST>(PRIMITIVE_UNIT);
-    case BYTE: 
+    case TOK_BYTE: 
         index++;
         return std::make_unique<PrimitiveTypeAST>(PRIMITIVE_BYTE);
-    case INT: 
+    case TOK_INT: 
         index++;
         return std::make_unique<PrimitiveTypeAST>(PRIMITIVE_INT);
-    case BOOL: 
+    case TOK_BOOL: 
         index++;
         return std::make_unique<PrimitiveTypeAST>(PRIMITIVE_BOOL);
-    case STAR:
+    case TOK_STAR:
     {
         index++;
         auto type = parseType();
@@ -385,7 +385,7 @@ bool Parser::parseParameter(Token * name, std::unique_ptr<TypeAST> * type) {
     assert(type != nullptr);
     size_t startIndex = index;
 
-    if (expectIdentifier(name) && expect(COLON) && expectType(type)) {
+    if (expectIdentifier(name) && expect(TOK_COLON) && expectType(type)) {
         return true;
     }
 
@@ -405,7 +405,7 @@ std::vector<Parameter> Parser::parseParameterList() {
     if (!hasParameter) {
         if (!eof() && error.empty()) {
             auto token = get();
-            if (token.type != CLOSE_PAREN) {
+            if (token.type != TOK_CLOSE_PAREN) {
                 error.token = token;
                 error.message << "ERR: unexpected symbol in parameter list: \"" << 
                     program.extract(token) << "\"";
@@ -418,7 +418,7 @@ std::vector<Parameter> Parser::parseParameterList() {
         parameters.push_back({ name, std::move(type) });
 
         size_t lastIndex = index;
-        if (!expect(COMMA)) {
+        if (!expect(TOK_COMMA)) {
             index = lastIndex;
             break;
         }
@@ -445,7 +445,7 @@ bool Parser::expectIdentifier(Token * token) {
     if (eof()) return false;
 
     auto tok = get();
-    if (tok.type != IDENTIFIER) return false;
+    if (tok.type != TOK_IDENTIFIER) return false;
     *token = tok;
     index++;
     return true;

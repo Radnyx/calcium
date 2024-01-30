@@ -110,7 +110,7 @@ llvm::Function * IRGenerator::generate(const FunctionPrototypeAST * prototype) {
     size_t index = 0;
     for (auto & arg : function->args()) {
         auto token = prototype->parameters[index].name;
-        if (token.type != NULL_TOKEN) {
+        if (token.type != TOK_NULL) {
             arg.setName(program.extract(token));
         }
         index++;
