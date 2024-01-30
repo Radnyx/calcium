@@ -12,6 +12,22 @@ bool AST::isFunctionDefinition() const {
     return false;
 }
 
+bool AST::isIncompleteStruct() const {
+    return false;
+}
+
+bool AST::isVariableDefinition() const {
+    return false;
+}
+
+bool AST::isWhileLoop() const {
+    return false;
+}
+
+bool AST::isReturn() const {
+    return false;
+}
+
 PrimitiveTypeAST::PrimitiveTypeAST(Primitive primitive) : primitive(primitive) {}
 
 TypeID PrimitiveTypeAST::getTypeID() const {
@@ -57,6 +73,9 @@ bool FunctionDefinitionAST::isFunctionDefinition() const {
 
 IncompleteStructAST::IncompleteStructAST(Token name) : name(name) {}
 
+bool IncompleteStructAST::isIncompleteStruct() const {
+    return true;
+}
 
 VariableAST::VariableAST(Token text) : text(text) {} 
 
@@ -101,15 +120,29 @@ VariableDefinitionAST::VariableDefinitionAST(
     Token name, std::unique_ptr<TypeAST> & type, std::unique_ptr<ExpressionAST> & expression
 ) : name(name), type(std::move(type)), expression(std::move(expression)) {}
 
+bool VariableDefinitionAST::isVariableDefinition() const {
+    return true;
+}
+
+
 bool ExpressionAST::isExpression() const {
     return true;
 }
 
+
 WhileLoopAST::WhileLoopAST(std::unique_ptr<ExpressionAST> & condition, std::unique_ptr<BodyAST> & body) 
 : condition(std::move(condition)), body(std::move(body)) {}
 
+bool WhileLoopAST::isWhileLoop() const {
+    return true;
+}
+
 
 ReturnAST::ReturnAST(std::unique_ptr<ExpressionAST> & expression) : expression(std::move(expression)) {}
+
+bool ReturnAST::isReturn() const {
+    return true;
+}
 
 
 BodyAST::BodyAST(std::vector<std::unique_ptr<AST>> & statements) 

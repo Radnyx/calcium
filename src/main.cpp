@@ -27,12 +27,16 @@ For an API to generate and assembling SPIR-V code.
 */
 
 int main(int argc, char* argv[]) {
+#ifdef _DEBUG
+    std::string filename = "../../examples/shader.ca";
+#else
     if (argc != 2) {
         std::cerr << "ERR: expected 1 argument, e,g. calcium main.ca" << std::endl;
         return 1;
     }
-
     std::string filename = argv[1];
+#endif
+
     std::ifstream stream(filename);
     if (!stream) {
         std::cerr << "ERR: could not find file " << filename << std::endl;

@@ -7,7 +7,8 @@
 enum Primitive {
     PRIMITIVE_UNIT,
     PRIMITIVE_INT,
-    PRIMITIVE_BYTE
+    PRIMITIVE_BYTE,
+    PRIMITIVE_BOOL
 };
 
 enum TypeID {
@@ -31,6 +32,10 @@ public:
     virtual bool isExpression() const;
     virtual bool isFunctionDeclaration() const;
     virtual bool isFunctionDefinition() const;
+    virtual bool isIncompleteStruct() const;
+    virtual bool isVariableDefinition() const;
+    virtual bool isWhileLoop() const;
+    virtual bool isReturn() const;
 };
 
 class BodyAST {
@@ -105,6 +110,7 @@ class IncompleteStructAST : public AST {
 public:
     IncompleteStructAST(Token name);
     const Token name;
+    bool isIncompleteStruct() const;
 };
 
 
@@ -163,6 +169,7 @@ public:
     const Token name;
     const std::unique_ptr<TypeAST> type;
     const std::unique_ptr<ExpressionAST> expression;
+    bool isVariableDefinition() const;
 };
 
 class WhileLoopAST : public AST {
@@ -170,12 +177,14 @@ public:
     WhileLoopAST(std::unique_ptr<ExpressionAST> & condition, std::unique_ptr<BodyAST> & body);
     const std::unique_ptr<ExpressionAST> condition;
     const std::unique_ptr<BodyAST> body;
+    bool isWhileLoop() const;
 };
 
 class ReturnAST : public AST {
 public:
     ReturnAST(std::unique_ptr<ExpressionAST> & expression);
     const std::unique_ptr<ExpressionAST> expression;
+    bool isReturn() const;
 };
 
 #endif // AST_H

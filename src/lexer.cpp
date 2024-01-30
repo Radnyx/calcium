@@ -220,6 +220,7 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
             readExact(&token, UNIT, "unit") || 
             readExact(&token, INT, "int") || 
             readExact(&token, BYTE, "byte") || 
+            readExact(&token, BOOL, "bool") || 
             // readExact(&token, VEC2, "vec2") || 
             // readExact(&token, VEC4, "vec4") || 
             readExact(&token, LET, "let") || 

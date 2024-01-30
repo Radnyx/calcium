@@ -357,6 +357,9 @@ std::unique_ptr<TypeAST> Parser::parseType() {
     case INT: 
         index++;
         return std::make_unique<PrimitiveTypeAST>(PRIMITIVE_INT);
+    case BOOL: 
+        index++;
+        return std::make_unique<PrimitiveTypeAST>(PRIMITIVE_BOOL);
     case STAR:
     {
         index++;

@@ -10,6 +10,7 @@ enum TokenType {
     UNIT,
     INT,
     BYTE,
+    BOOL,
     STAR,
     COLON,
     FUN,

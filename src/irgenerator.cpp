@@ -1,4 +1,12 @@
 #include "../include/irgenerator.h"
+#include "llvm/IR/Constants.h"
+
+static llvm::AllocaInst * createEntryBlockAlloca(
+    llvm::Function * function, llvm::Type * type, llvm::StringRef name
+) {
+    llvm::IRBuilder<> builder(&function->getEntryBlock(), function->getEntryBlock().begin());
+    return builder.CreateAlloca(type, nullptr, name);
+}
 
 IRGenerator::IRGenerator(
     Program & program,
@@ -9,6 +17,12 @@ IRGenerator::IRGenerator(
 }
 
 void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
+    auto kernelType = llvm::StructType::create(*llvmContext, "Kernel");
+    kernelType->setBody({
+        irBuilder->getInt8Ty()->getPointerTo(),
+        irBuilder->getInt64Ty()
+    });
+
     for (auto & node : ast) {
         if (node->isFunctionDeclaration()) {
             auto declaration = static_cast<const FunctionDeclarationAST *>(node.get());
@@ -20,8 +34,11 @@ void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
             if (generate(definition) == nullptr) {
                 break;
             }
+        } else if (node->isIncompleteStruct()) {
+            auto declaration = static_cast<const IncompleteStructAST *>(node.get());
+            incompleteStructs.insert(program.extract(declaration->name));
         } else {
-            // ERROR
+            assert(false);
         }
     }
 
@@ -36,6 +53,8 @@ llvm::Type * IRGenerator::generate(Primitive primitive) {
         return irBuilder->getInt8Ty();
     case PRIMITIVE_INT:
         return irBuilder->getInt32Ty();
+    case PRIMITIVE_BOOL:
+        return irBuilder->getInt1Ty();
     }
     return nullptr;
 }
@@ -54,6 +73,16 @@ llvm::Type * IRGenerator::generate(const TypeAST * type) {
         assert(gen != nullptr);
 
         return gen->getPointerTo();
+    }
+    case TYPE_STRUCT:
+    {
+        auto structType = static_cast<const StructTypeAST *>(type);
+        auto name = program.extract(structType->name);
+        if (incompleteStructs.find(name) != incompleteStructs.end()) {
+            // can only use as a pointer
+            return irBuilder->getInt8Ty();
+        }
+        return llvm::StructType::getTypeByName(*llvmContext, name);
     }
     default:
         return nullptr;
@@ -109,7 +138,10 @@ llvm::Function * IRGenerator::generate(const FunctionDefinitionAST * definition)
 
     for (auto & arg : function->args()) {
         if (arg.hasName()) {
-            symbols[std::string(arg.getName())].push(&arg);
+            auto name = arg.getName();
+            auto alloc = createEntryBlockAlloca(function, arg.getType(), name);
+            irBuilder->CreateStore(&arg, alloc);
+            symbols[std::string(arg.getName())].push(alloc);
         }
     }
 
@@ -121,7 +153,7 @@ llvm::Function * IRGenerator::generate(const FunctionDefinitionAST * definition)
         returnType->getTypeID() == TYPE_PRIMITIVE && 
         static_cast<const PrimitiveTypeAST *>(returnType)->primitive == PRIMITIVE_UNIT
     ) {
-        irBuilder->CreateRet(llvm::ConstantInt::get(*llvmContext, llvm::APInt(1, false)));
+        irBuilder->CreateRet(llvm::ConstantInt::get(irBuilder->getInt1Ty(), 0));
     }
 
     for (auto & arg : function->args()) {
@@ -141,19 +173,49 @@ void IRGenerator::generate(const BodyAST * body) {
             if (value == nullptr) {
                 return;
             }
-
-            // irBuilder->Insert(value, "tmp");
         }
+        else if (statement->isVariableDefinition()) {
+            auto definition = static_cast<const VariableDefinitionAST *>(statement.get());
+            auto name = program.extract(definition->name);
+            llvm::Function * function = irBuilder->GetInsertBlock()->getParent();
+            llvm::Type * type = generate(definition->type.get());
+            llvm::Value * value = generate(definition->expression.get());
+
+            auto alloc = createEntryBlockAlloca(function, type, name);
+            irBuilder->CreateStore(value, alloc);
+
+            symbols[name].push(alloc); // TODO: pop this when leaving braces scope
+        }
+        else if (statement->isWhileLoop()) {
+            
+        }
+        else if (statement->isReturn()) {
+
+        }
+
     }
 }
 
 llvm::Value * IRGenerator::generate(const ExpressionAST * expression) {
     switch (expression->getExpressionID()) {
+    case EXPRESSION_INT_LITERAL:
+    {
+        auto intLiteral = static_cast<const IntLiteralAST *>(expression);
+        auto text = program.extract(intLiteral->text);
+        return llvm::ConstantInt::get(irBuilder->getInt32Ty(), std::stoi(text));
+    }
     case EXPRESSION_STRING_LITERAL:
     {
         auto stringLiteral = static_cast<const StringLiteralAST *>(expression);
         auto text = program.extract(stringLiteral->text);
         return irBuilder->CreateGlobalStringPtr(text);
+    }
+    case EXPRESSION_VARIABLE:
+    {
+        auto variable = static_cast<const VariableAST *>(expression);
+        auto name = program.extract(variable->text);
+        auto alloc = symbols[name].top();
+        return irBuilder->CreateLoad(alloc->getAllocatedType(), alloc, name.c_str());
     }
     case EXPRESSION_FUNCTION_CALL:
     {
