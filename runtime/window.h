@@ -93,18 +93,22 @@ struct Window final {
 /*
 struct Kernel { 
     const uint8_t * code;
-    size_t size;
+    uint64_t size;
 };
 */
 
-Window * createWindow(const char * title, uint32_t width, uint32_t height);
+extern "C" {
 
-// void createDemoPipeline(Window * window, Kernel kernel);
+    Window * createWindow(const char * title, uint32_t width, uint32_t height);
 
-void update(Window * window);
+    // void createDemoPipeline(Window * window, Kernel kernel);
 
-bool closed(Window * window);
+    int update(Window * window);
 
-void destroyWindow(Window * window);
+    bool closed(Window * window);
+
+    int destroyWindow(Window * window);
+
+}
 
 #endif // _WINDOW_H_

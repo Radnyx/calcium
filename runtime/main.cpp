@@ -8,6 +8,9 @@
 #include "window.h"
 
 #ifdef _WIN32
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "shell32.lib")
 #define DLLEXPORT __declspec(dllexport)
 #else
 #define DLLEXPORT

@@ -20,6 +20,7 @@ fun main(): unit {
 
     // setupDemoPipeline(window, fragmentShader); // pass in compiled kernel by value!
 
+    // TODO: generate while loop and not expression
     while (!closed(window)) {
         update(window);
     }

@@ -801,19 +801,21 @@ Window * createWindow(const char * title, uint32_t width, uint32_t height) {
     // TODO
 // }
 
-void update(Window * window) {
+int update(Window * window) {
     try {
         window->app->update();
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         window->forceQuit = true;
     }
+    return 0;
 }
 
 bool closed(Window * window) {
     return window->forceQuit || window->app->closed();
 }
 
-void destroyWindow(Window * window) {
+int destroyWindow(Window * window) {
     delete window;
+    return 0;
 }
