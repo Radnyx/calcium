@@ -187,7 +187,26 @@ void IRGenerator::generate(const BodyAST * body) {
             symbols[name].push(alloc); // TODO: pop this when leaving braces scope
         }
         else if (statement->isWhileLoop()) {
-            
+            auto whileLoop = static_cast<const WhileLoopAST *>(statement.get());
+            llvm::Function * function = irBuilder->GetInsertBlock()->getParent();
+            auto conditionBlock = llvm::BasicBlock::Create(*llvmContext, "while.cond", function);
+            auto bodyBlock = llvm::BasicBlock::Create(*llvmContext, "while.body", function);
+            auto endBlock = llvm::BasicBlock::Create(*llvmContext, "while.end", function);
+            irBuilder->CreateBr(conditionBlock);
+            // while.cond:
+            irBuilder->SetInsertPoint(conditionBlock);
+            // compare x <= y
+            auto value = generate(whileLoop->condition.get());
+            assert(value != nullptr);
+            // if true, branch to while.body, otherwise while.end
+            irBuilder->CreateCondBr(value, bodyBlock, endBlock);
+            // while.body:
+            irBuilder->SetInsertPoint(bodyBlock);
+            generate(whileLoop->body.get());
+            // branch to while.cond
+            irBuilder->CreateBr(conditionBlock);
+            // while.end:
+            irBuilder->SetInsertPoint(endBlock);
         }
         else if (statement->isReturn()) {
 
@@ -216,6 +235,12 @@ llvm::Value * IRGenerator::generate(const ExpressionAST * expression) {
         auto name = program.extract(variable->text);
         auto alloc = symbols[name].top();
         return irBuilder->CreateLoad(alloc->getAllocatedType(), alloc, name.c_str());
+    }
+    case EXPRESSION_NOT_OPERATION:
+    {
+        auto notOperation = static_cast<const NotOperationAST *>(expression);
+        auto value = generate(notOperation->expression.get());
+        return irBuilder->CreateNot(value, "not");
     }
     case EXPRESSION_FUNCTION_CALL:
     {
