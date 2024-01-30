@@ -2,25 +2,25 @@
 
 Shared programming language for the CPU and GPU.
 
-## Current Progress
+## Examples
 
-### Program
+### Hello World
 ```
 fun printf(* byte): int;
 
-fun init(): unit {
+fun main(): unit {
     printf("Hello, world!");
 }
 ```
 
-### Compilation and execution
+#### Compilation and execution
 ```bash
-./calcium examples/test.ca 
-clang main.c examples/test.o -o test.exe
-./test
+./calcium examples/helloworld.ca 
+clang native/main.cpp examples/helloworld.o -o helloworld
+./helloworld
 ```
 
-### Output
+#### Output
 ```
 Hello, world!
 ```
@@ -28,5 +28,7 @@ Hello, world!
 ## Future Plans
 
 * Emitting `ker` functions as SPIR-V assembly.
-* Executing kernels directly and specifying blocks, threads.
 * Supplying kernel as shaders to Vulkan bindings.
+* Executing compute shaders directly. Specifying blocks, threads.
+* Shared constants in CPU and GPU code.
+* Shared memory and shader uniforms. 
