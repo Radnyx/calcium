@@ -79,7 +79,7 @@ llvm::Type * IRGenerator::generate(const TypeAST * type) {
         auto structType = static_cast<const StructTypeAST *>(type);
         auto name = program.extract(structType->name);
         if (incompleteStructs.find(name) != incompleteStructs.end()) {
-            // can only use as a pointer
+            // can only use incomplete structs as a pointer
             return irBuilder->getInt8Ty();
         }
         return llvm::StructType::getTypeByName(*llvmContext, name);
