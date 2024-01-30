@@ -24,8 +24,6 @@ TODO: read https://github.com/KhronosGroup/SPIRV-Guide/tree/master
 Refer to https://github.com/KhronosGroup/SPIRV-Tools/blob/main/docs/syntax.md
 For an API to generate and assembling SPIR-V code.
 
-Follow up on this: https://community.khronos.org/t/is-there-an-api-for-generating-spir-v-assembly/110472
-
 */
 
 int main(int argc, char* argv[]) {

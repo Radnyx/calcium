@@ -12,6 +12,14 @@ enum TokenType {
     STAR,
     COLON,
     FUN,
+    STRUCT,
+    KER,
+    KERNEL,
+    VEC2,
+    VEC4,
+    LET,
+    WHILE,
+    RETURN,
     IDENTIFIER,
     OPEN_PAREN,
     CLOSE_PAREN,
@@ -20,6 +28,10 @@ enum TokenType {
     COMMA,
     SEMICOLON,
     EQUALS,
+    NOT,
+    MINUS,
+    FLOAT_LITERAL,
+    INT_LITERAL,
     STRING_LITERAL
 };
 
@@ -51,8 +63,12 @@ private:
     void skipWhitespace();
     void skipComment();
     bool readIdentifier(Token * const token);
+    bool readFloatLiteral(Token * const token);
+    bool readIntLiteral(Token * const token);
     bool readStringLiteral(Token * const Token);
     bool readExact(Token * const token, TokenType type, const std::string & str);
+
+    void rewind(size_t oldIndex);
 };
 
 #endif // LEXER_H
