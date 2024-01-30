@@ -37,7 +37,7 @@ Error Parser::parse(std::vector<std::unique_ptr<AST>> & ast) {
 }
 
 std::unique_ptr<BodyAST> Parser::parseBody() {
-    int startIndex = index;
+    size_t startIndex = index;
 
     if (!expect(OPEN_BRACE)) {
         index = startIndex;
@@ -67,7 +67,7 @@ std::vector<std::unique_ptr<AST>> Parser::parseStatementList() {
 }
 
 std::unique_ptr<AST> Parser::parseStatement() {
-    int startIndex = index;
+    size_t startIndex = index;
 
     auto statement = parseExpression();
     if (statement == nullptr) {
@@ -101,7 +101,7 @@ std::unique_ptr<StringLiteralAST> Parser::parseStringLiteral() {
 }
 
 std::unique_ptr<FunctionCallAST> Parser::parseFunctionCall() {
-    int startIndex = index;
+    size_t startIndex = index;
 
     Token name;
     if (!(expectIdentifier(&name) && expect(OPEN_PAREN))) {
@@ -126,7 +126,7 @@ std::vector<std::unique_ptr<ExpressionAST>> Parser::parseExpressionList() {
     while (expression != nullptr) {
         expressions.push_back(std::move(expression));
 
-        int lastIndex = index;
+        size_t lastIndex = index;
         if (!expect(COMMA)) {
             index = lastIndex;
             break;
@@ -141,7 +141,7 @@ std::vector<std::unique_ptr<ExpressionAST>> Parser::parseExpressionList() {
 
 
 std::unique_ptr<FunctionPrototypeAST> Parser::parseFunctionPrototype() {
-    int startIndex = index;
+    size_t startIndex = index;
 
     Token name;
     std::unique_ptr<TypeAST> returnType;
@@ -194,7 +194,7 @@ std::unique_ptr<TypeAST> Parser::parseType() {
 bool Parser::parseParameter(Token * name, std::unique_ptr<TypeAST> * type) {
     assert(name != nullptr);
     assert(type != nullptr);
-    int startIndex = index;
+    size_t startIndex = index;
 
     if (expectIdentifier(name) && expect(COLON) && expectType(type)) {
         return true;
@@ -220,7 +220,7 @@ std::vector<Parameter> Parser::parseParameterList() {
     while (hasParameter) {
         parameters.push_back({ name, std::move(type) });
 
-        int lastIndex = index;
+        size_t lastIndex = index;
         if (!expect(COMMA)) {
             index = lastIndex;
             break;

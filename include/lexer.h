@@ -26,10 +26,10 @@ enum TokenType {
 struct Token {
     Token();
     TokenType type;
-    int startIndex;
-    int endIndex;
-    int line;
-    int column;
+    size_t startIndex;
+    size_t endIndex;
+    size_t line;
+    size_t column;
 };
 
 class Lexer {
@@ -40,9 +40,9 @@ public:
 
 private:
     const std::string & program;
-    int index;
-    int line;
-    int column;
+    size_t index;
+    size_t line;
+    size_t column;
 
     bool eof() const;
     char get() const;

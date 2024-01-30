@@ -76,7 +76,7 @@ llvm::Function * IRGenerator::generate(const FunctionPrototypeAST * prototype) {
     auto name = program.extract(prototype->name);
     auto function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, name, llvmModule.get());
     
-    int index = 0;
+    size_t index = 0;
     for (auto & arg : function->args()) {
         auto token = prototype->parameters[index].name;
         if (token.type != NULL_TOKEN) {
@@ -174,7 +174,7 @@ llvm::Value * IRGenerator::generate(const ExpressionAST * expression) {
         }
 
         std::vector<llvm::Value *> args;
-        for (int i = 0; i < paramCount; i++) {
+        for (size_t i = 0; i < paramCount; i++) {
             
             auto arg = generate(functionCall->arguments[i].get());
             if (arg == nullptr) {

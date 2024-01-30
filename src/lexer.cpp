@@ -72,7 +72,7 @@ bool Lexer::readStringLiteral(Token * const token) {
     if (eof()) return false;
     if (get() != '"') return false;
 
-    int startIndex = index;
+    size_t startIndex = index;
     advance();
 
     token->type = STRING_LITERAL;
@@ -98,7 +98,7 @@ bool Lexer::readStringLiteral(Token * const token) {
 bool Lexer::readExact(Token * const token, TokenType type, const std::string & str) {
     assert(token != nullptr);
     
-    int startIndex = index;
+    size_t startIndex = index;
 
     token->type = type;
     token->startIndex = startIndex;

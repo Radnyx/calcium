@@ -14,7 +14,7 @@ public:
     Token get() const;
 private:
     const std::vector<Token> & tokens;
-    int index; // current position in the token list
+    size_t index; // current position in the token list
 
     /* Returns true if it finds the expected syntax, advances the index.
         If false, the caller must keep track of the original index. */
