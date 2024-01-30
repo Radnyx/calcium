@@ -11,8 +11,4 @@
 #define DLLEXPORT
 #endif
 
-extern DLLEXPORT int init();
-
-int main() {
-    return init();
-}
+extern DLLEXPORT int main();
