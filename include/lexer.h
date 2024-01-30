@@ -4,6 +4,7 @@
 #include <vector>
 #include "errors.h"
 
+// TODO: add eof token, should relieve some "eof()" checks in the parser
 enum TokenType {
     NULL_TOKEN,
     UNIT,
@@ -14,7 +15,7 @@ enum TokenType {
     FUN,
     STRUCT,
     KER,
-    KERNEL,
+    // KERNEL,
     VEC2,
     VEC4,
     LET,

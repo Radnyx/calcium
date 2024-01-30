@@ -119,13 +119,14 @@ bool Lexer::readIntLiteral(Token * const token) {
     if (eof()) return false;
     if (!isdigit(get())) return false;
 
+    token->startIndex = index;
+
     char c;
     while (!eof() && isdigit(c = get())) {
         advance();
     }
 
     token->type = INT_LITERAL;
-    token->startIndex = index;
     token->line = line;
     token->column = column;
     token->endIndex = index;
@@ -164,10 +165,10 @@ bool Lexer::readStringLiteral(Token * const token) {
     advance(); // '"'
 
     token->type = STRING_LITERAL;
-    token->startIndex = index;
+    token->startIndex = startIndex;
+    token->endIndex = index;
     token->line = line;
     token->column = column;
-    token->endIndex = index;
 
     return true;
 }
@@ -214,7 +215,7 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
         bool success = 
             readExact(&token, FUN, "fun") || 
             readExact(&token, KER, "ker") || 
-            readExact(&token, KERNEL, "Kernel") || 
+            // readExact(&token, KERNEL, "Kernel") || 
             readExact(&token, STRUCT, "struct") || 
             readExact(&token, UNIT, "unit") || 
             readExact(&token, INT, "int") || 

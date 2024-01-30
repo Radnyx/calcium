@@ -55,17 +55,12 @@ int main(int argc, char* argv[]) {
 
     // ============ PARSER ============
     
-    Parser parser(tokens);
+    Parser parser(program, tokens);
 
     std::vector<std::unique_ptr<AST>> ast;
     err = parser.parse(ast);
 
     if (err != ERR_NONE) {
-        if (!parser.eof()) {
-            auto tok = parser.get();
-            std::cerr << "ERR: line " << tok.line << ", column " << tok.column << std::endl;
-        }
-
         return err;
     }
 
