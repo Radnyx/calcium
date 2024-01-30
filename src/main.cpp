@@ -4,9 +4,9 @@
 #include <vector>
 #include <cassert>
 
-#include "../include/parser.h"
-#include "../include/irgenerator.h"
-#include "../include/writer.h"
+#include "../include/Parser.h"
+#include "../include/IRGenerator.h"
+#include "../include/Writer.h"
 
 #include <vulkan/vulkan.h>
 

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <llvm/IR/Module.h>
 #include <llvm/Target/TargetMachine.h>
-#include "errors.h"
+#include "Errors.h"
 
 class Writer {
 public:

@@ -2,9 +2,9 @@
 #define PARSER_H
 #include <vector>
 #include <sstream>
-#include "errors.h"
-#include "program.h"
-#include "ast.h"
+#include "Errors.h"
+#include "Program.h"
+#include "AST.h"
 
 struct ParserError {
     Token token;

@@ -1,4 +1,4 @@
-#include "../include/lexer.h"
+#include "../include/Lexer.h"
 #include <cassert>
 
 static std::string takeExample(const std::string & text, size_t index) {

@@ -2,7 +2,7 @@
 #define AST_H
 #include <memory>
 #include <optional>
-#include "lexer.h"
+#include "Lexer.h"
 
 enum Primitive {
     PRIMITIVE_UNIT,
@@ -100,9 +100,14 @@ public:
 
 class FunctionDefinitionAST : public AST {
 public:
-    FunctionDefinitionAST(std::unique_ptr<FunctionPrototypeAST> & prototype, std::unique_ptr<BodyAST> & body);
+    FunctionDefinitionAST(
+        std::unique_ptr<FunctionPrototypeAST> & prototype, 
+        std::unique_ptr<BodyAST> & body,
+        bool isKernel = false
+    );
     const std::unique_ptr<FunctionPrototypeAST> prototype; 
-    const std::unique_ptr<BodyAST> body; 
+    const std::unique_ptr<BodyAST> body;
+    const bool isKernel;
     bool isFunctionDefinition() const;
 };
 

@@ -1,4 +1,4 @@
-#include "../include/ast.h"
+#include "../include/AST.h"
 
 bool AST::isExpression() const {
     return false;
@@ -63,9 +63,10 @@ bool FunctionDeclarationAST::isFunctionDeclaration() const {
 
 FunctionDefinitionAST::FunctionDefinitionAST(
     std::unique_ptr<FunctionPrototypeAST> & prototype, 
-    std::unique_ptr<BodyAST> & body
+    std::unique_ptr<BodyAST> & body,
+    bool isKernel
 )
-: prototype(std::move(prototype)), body(std::move(body)) {}
+: prototype(std::move(prototype)), body(std::move(body)), isKernel(isKernel) {}
 
 bool FunctionDefinitionAST::isFunctionDefinition() const {
     return true;

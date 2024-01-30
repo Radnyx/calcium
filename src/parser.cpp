@@ -1,4 +1,4 @@
-#include "../include/parser.h"
+#include "../include/Parser.h"
 #include <cassert>
 
 bool ParserError::empty() {
@@ -74,7 +74,7 @@ bool Parser::parseFunction(std::unique_ptr<AST> * statement) {
             return false;
         }
 
-        *statement = std::make_unique<FunctionDefinitionAST>(prototype, body);
+        *statement = std::make_unique<FunctionDefinitionAST>(prototype, body, isKernel);
     }
 
     return true;

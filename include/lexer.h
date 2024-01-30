@@ -2,7 +2,7 @@
 #define LEXER_H
 #include <iostream>
 #include <vector>
-#include "errors.h"
+#include "Errors.h"
 
 // TODO: add eof token, should relieve some "eof()" checks in the parser
 enum TokenType {

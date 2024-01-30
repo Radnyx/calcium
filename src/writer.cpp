@@ -1,4 +1,4 @@
-#include "../include/writer.h"
+#include "../include/Writer.h"
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/TargetParser/Host.h>

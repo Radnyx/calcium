@@ -7,8 +7,8 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
 #include "llvm/IR/Instructions.h"
-#include "ast.h"
-#include "program.h"
+#include "AST.h"
+#include "Program.h"
 
 class IRGenerator {
 public:

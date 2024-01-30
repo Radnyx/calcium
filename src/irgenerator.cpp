@@ -1,4 +1,4 @@
-#include "../include/irgenerator.h"
+#include "../include/IRGenerator.h"
 #include "llvm/IR/Constants.h"
 
 static llvm::AllocaInst * createEntryBlockAlloca(
@@ -31,7 +31,9 @@ void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
             }
         } else if (node->isFunctionDefinition()) {
             auto definition = static_cast<const FunctionDefinitionAST *>(node.get());
-            if (generate(definition) == nullptr) {
+            if (definition->isKernel) {
+                
+            } else if (generate(definition) == nullptr) {
                 break;
             }
         } else if (node->isIncompleteStruct()) {
