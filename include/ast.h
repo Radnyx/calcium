@@ -19,6 +19,7 @@ enum TypeID {
 enum ExpressionID {
     EXPRESSION_VARIABLE,
     EXPRESSION_INT_LITERAL,
+    EXPRESSION_FLOAT_LITERAL,
     EXPRESSION_STRING_LITERAL,
     EXPRESSION_FUNCTION_CALL,
     EXPRESSION_NOT_OPERATION,
@@ -127,6 +128,13 @@ public:
     ExpressionID getExpressionID() const;
 };
 
+class FloatLiteralAST : public ExpressionAST {
+public:
+    FloatLiteralAST(Token text);
+    const Token text;
+    ExpressionID getExpressionID() const;
+};
+
 class StringLiteralAST : public ExpressionAST {
 public:
     StringLiteralAST(Token text);
@@ -162,6 +170,12 @@ public:
     WhileLoopAST(std::unique_ptr<ExpressionAST> & condition, std::unique_ptr<BodyAST> & body);
     const std::unique_ptr<ExpressionAST> condition;
     const std::unique_ptr<BodyAST> body;
+};
+
+class ReturnAST : public AST {
+public:
+    ReturnAST(std::unique_ptr<ExpressionAST> & expression);
+    const std::unique_ptr<ExpressionAST> expression;
 };
 
 #endif // AST_H

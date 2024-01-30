@@ -70,6 +70,12 @@ ExpressionID IntLiteralAST::getExpressionID() const {
     return EXPRESSION_INT_LITERAL; 
 }
 
+FloatLiteralAST::FloatLiteralAST(Token text) : text(text) {} 
+
+ExpressionID FloatLiteralAST::getExpressionID() const { 
+    return EXPRESSION_FLOAT_LITERAL; 
+}
+
 StringLiteralAST::StringLiteralAST(Token text) : text(text) {} 
 
 ExpressionID StringLiteralAST::getExpressionID() const { 
@@ -101,6 +107,10 @@ bool ExpressionAST::isExpression() const {
 
 WhileLoopAST::WhileLoopAST(std::unique_ptr<ExpressionAST> & condition, std::unique_ptr<BodyAST> & body) 
 : condition(std::move(condition)), body(std::move(body)) {}
+
+
+ReturnAST::ReturnAST(std::unique_ptr<ExpressionAST> & expression) : expression(std::move(expression)) {}
+
 
 BodyAST::BodyAST(std::vector<std::unique_ptr<AST>> & statements) 
 : statements(std::move(statements)) {}

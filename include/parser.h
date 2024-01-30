@@ -41,6 +41,7 @@ private:
     std::vector<std::unique_ptr<AST>> parseStatementList();
     std::unique_ptr<AST> parseStatement();
     std::unique_ptr<VariableDefinitionAST> parseVariableDefinition();
+    std::unique_ptr<ReturnAST> parseReturn();
     std::unique_ptr<WhileLoopAST> parseWhileLoop();
     std::unique_ptr<ExpressionAST> parseExpression();
     std::unique_ptr<NotOperationAST> parseNotOperation();
@@ -48,7 +49,7 @@ private:
     std::vector<std::unique_ptr<ExpressionAST>> parseExpressionList();
 
     std::unique_ptr<TypeAST> parseType(); 
-    std::unique_ptr<FunctionPrototypeAST> parseFunctionPrototype();
+    std::unique_ptr<FunctionPrototypeAST> parseFunctionPrototype(bool isKernel = false);
     std::vector<Parameter> parseParameterList();
     bool parseParameter(Token * name, std::unique_ptr<TypeAST> * type);
 

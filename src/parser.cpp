@@ -37,7 +37,13 @@ Error Parser::parse(std::vector<std::unique_ptr<AST>> & ast) {
 }
 
 bool Parser::parseFunction(std::unique_ptr<AST> * statement) {
-    auto prototype = parseFunctionPrototype();
+    bool isKernel = false;
+    auto prototype = parseFunctionPrototype(isKernel);
+
+    if (prototype == nullptr) {
+        isKernel = true;
+        prototype = parseFunctionPrototype(isKernel);
+    }
 
     if (prototype == nullptr) {
         return false;
@@ -49,6 +55,14 @@ bool Parser::parseFunction(std::unique_ptr<AST> * statement) {
     }
 
     if (get().type == SEMICOLON) {
+        if (isKernel) {
+            if (!eof() && error.empty()) {
+                error.token = get();
+                error.message << "kernel must have function body";
+            }
+            return false;
+        }
+
         index++;
         
         *statement = std::make_unique<FunctionDeclarationAST>(prototype);
@@ -89,8 +103,8 @@ std::unique_ptr<BodyAST> Parser::parseBody() {
     if (!expect(CLOSE_BRACE)) {
         if (!eof() && error.empty()) {
             error.token = get();
-            std::cerr << "missing closing brace, found: \"" <<
-                program.extract(error.token) << "\"" << std::endl;
+            error.message << "missing closing brace, found: \"" <<
+                program.extract(error.token) << "\"";
         }
         index = startIndex;
         return nullptr;
@@ -119,6 +133,10 @@ std::unique_ptr<AST> Parser::parseStatement() {
     std::unique_ptr<AST> statement = parseExpression();
     if (statement == nullptr) {
         statement = parseVariableDefinition();
+    }
+
+    if (statement == nullptr) {
+        statement = parseReturn();
     }
 
     if (statement == nullptr) {
@@ -168,6 +186,25 @@ std::unique_ptr<VariableDefinitionAST> Parser::parseVariableDefinition() {
     return std::make_unique<VariableDefinitionAST>(name, type, expression);
 }
 
+std::unique_ptr<ReturnAST> Parser::parseReturn() {
+    size_t startIndex = index;
+    std::unique_ptr<ExpressionAST> expression;
+    bool hasReturn = expect(RETURN);
+    bool success = hasReturn && expectExpression(&expression);
+    if (!success) {
+        if (!eof() && hasReturn && error.empty()) {
+            error.token = get();
+            error.message << "missing expression in return statement, found \""
+                << program.extract(error.token) << "\"";
+        }
+
+        index = startIndex;
+        return nullptr;
+    }
+
+    return std::make_unique<ReturnAST>(expression);
+}
+
 std::unique_ptr<WhileLoopAST> Parser::parseWhileLoop() {
     size_t startIndex = index;
     std::unique_ptr<ExpressionAST> condition;
@@ -208,6 +245,9 @@ std::unique_ptr<ExpressionAST> Parser::parseExpression() {
     if (expr) return expr;
 
     expr = parseToken<IntLiteralAST, INT_LITERAL>();
+    if (expr) return expr;
+    
+    expr = parseToken<FloatLiteralAST, FLOAT_LITERAL>();
     if (expr) return expr;
     
     expr = parseToken<StringLiteralAST, STRING_LITERAL>();
@@ -272,13 +312,14 @@ std::vector<std::unique_ptr<ExpressionAST>> Parser::parseExpressionList() {
     return expressions;
 }
 
-std::unique_ptr<FunctionPrototypeAST> Parser::parseFunctionPrototype() {
+std::unique_ptr<FunctionPrototypeAST> Parser::parseFunctionPrototype(bool isKernel) {
     size_t startIndex = index;
 
     Token name;
     std::unique_ptr<TypeAST> returnType;
 
-    if (!(expect(FUN) && expectIdentifier(&name) && expect(OPEN_PAREN))) {
+    auto keyword = isKernel ? KER : FUN;
+    if (!(expect(keyword) && expectIdentifier(&name) && expect(OPEN_PAREN))) {
         index = startIndex;
         return nullptr;
     }
@@ -286,6 +327,12 @@ std::unique_ptr<FunctionPrototypeAST> Parser::parseFunctionPrototype() {
     auto parameterList = parseParameterList();
 
     if (!(expect(CLOSE_PAREN) && expect(COLON) && expectType(&returnType))) {
+        if (!eof() && error.empty()) {
+            error.token = get();
+            error.message << "unexpected symbol in function prototype: \"" << 
+                program.extract(error.token) << "\"";
+        }
+
         index = startIndex;
         return nullptr;
     }
@@ -353,11 +400,12 @@ std::vector<Parameter> Parser::parseParameterList() {
     std::unique_ptr<TypeAST> type;
     bool hasParameter = parseParameter(&name, &type);
     if (!hasParameter) {
-        if (!eof()) {
+        if (!eof() && error.empty()) {
             auto token = get();
             if (token.type != CLOSE_PAREN) {
-                std::cerr << "ERR: unexpected symbol in parameter list: \"" << 
-                    program.extract(token) << "\"" << std::endl;
+                error.token = token;
+                error.message << "ERR: unexpected symbol in parameter list: \"" << 
+                    program.extract(token) << "\"";
             }
         }
         return parameters;
