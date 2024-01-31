@@ -99,7 +99,6 @@ void VulkanApplication::initVulkan() {
     createSwapChain();
     createImageViews();
     createRenderPass();
-    createGraphicsPipeline();
     createFramebuffers();
     createCommandPool();
     createCommandBuffer();
@@ -343,12 +342,18 @@ void VulkanApplication::createRenderPass() {
     }
 }
 
-void VulkanApplication::createGraphicsPipeline() {
+void VulkanApplication::createGraphicsPipeline(const Kernel * kernel) {
     auto vertShaderCode = readFile("shaders/vert.spv");
-    auto fragShaderCode = readFile("shaders/frag.spv");
 
-    VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-    VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+    VkShaderModule vertShaderModule = createShaderModule(
+        reinterpret_cast<const uint32_t*>(vertShaderCode.data()),
+        vertShaderCode.size()
+    );
+
+    VkShaderModule fragShaderModule = createShaderModule(
+        kernel->code,
+        kernel->size
+    );
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -606,11 +611,11 @@ void VulkanApplication::drawFrame() {
     vkQueuePresentKHR(presentQueue, &presentInfo);
 }
 
-VkShaderModule VulkanApplication::createShaderModule(const std::vector<char>& code) {
+VkShaderModule VulkanApplication::createShaderModule(const uint32_t * code, uint64_t size) {
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = code.size();
-    createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+    createInfo.pCode = code;
+    createInfo.codeSize = size * 4;
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
@@ -797,9 +802,9 @@ Window * createWindow(const char * title, uint32_t width, uint32_t height) {
     return window;
 }
 
-// void createDemoPipeline(Window * window, Kernel kernel) {
-    // TODO
-// }
+void setupDemoPipeline(Window * window, const Kernel * kernel) {
+    window->app->createGraphicsPipeline(kernel);
+}
 
 int update(Window * window) {
     try {

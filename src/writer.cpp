@@ -34,6 +34,8 @@ Writer::Writer(std::shared_ptr<llvm::Module> & llvmModule) : llvmModule(llvmModu
 }
 
 Error Writer::output(const std::string & filename) {
+    // TODO: optimizer pass
+
     std::error_code err;
     llvm::raw_fd_ostream dest(filename, err, llvm::sys::fs::OF_None);
 

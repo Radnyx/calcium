@@ -26,13 +26,17 @@ public:
     const std::shared_ptr<llvm::Module> llvmModule;
     std::unique_ptr<llvm::IRBuilder<>> irBuilder;
     std::unordered_map<std::string, std::stack<llvm::AllocaInst *>> symbols;
+    std::unordered_map<std::string, llvm::Value *> globals;
     std::unordered_set<std::string> incompleteStructs; 
+
+    llvm::StructType * kernelType;
 
     llvm::Type * generate(Primitive primitive);
     llvm::Type * generate(const TypeAST * type);
     llvm::Function * generate(const FunctionPrototypeAST * prototype);
     llvm::Function * generate(const FunctionDeclarationAST * declaration);
     llvm::Function * generate(const FunctionDefinitionAST * definition);
+    void generateKernel(const FunctionDefinitionAST * definition);
     void generate(const BodyAST * body);
     llvm::Value * generate(const ExpressionAST * expression);
 };

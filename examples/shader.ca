@@ -10,24 +10,23 @@
 struct Window;
 
 fun createWindow(title: * byte, width: int, height: int): * Window;
-// fun setupDemoPipeline(* Window, Kernel): unit;
+fun setupDemoPipeline(* Window, * Kernel): unit;
 fun update(* Window): unit;
 fun closed(* Window): bool;
 fun destroyWindow(* Window): unit;
 
+ker fragmentShader(uv: vec2): vec4 {
+    return vec4(1.0, 0.0, 0.0, 1.0);
+}
+
 fun main(): unit {
     let window: * Window = createWindow("Shader Demo", 800, 600);
 
-    // setupDemoPipeline(window, fragmentShader); // pass in compiled kernel by value!
+    setupDemoPipeline(window, fragmentShader); // pass in compiled kernel
 
-    // TODO: generate while loop and not expression
     while (!closed(window)) {
         update(window);
     }
 
     destroyWindow(window);
-}
-
-ker fragmentShader(uv: vec2): vec4 {
-    return vec4(1.0, 0.0, 0.0, 1.0);
 }

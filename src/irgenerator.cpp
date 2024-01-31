@@ -1,5 +1,6 @@
 #include "../include/IRGenerator.h"
 #include "llvm/IR/Constants.h"
+#include "../include/SPIRVGenerator.h"
 
 static llvm::AllocaInst * createEntryBlockAlloca(
     llvm::Function * function, llvm::Type * type, llvm::StringRef name
@@ -14,15 +15,17 @@ IRGenerator::IRGenerator(
     std::shared_ptr<llvm::Module> & llvmModule
 ) : program(program), llvmContext(llvmContext), llvmModule(llvmModule) {
     irBuilder = std::make_unique<llvm::IRBuilder<>>(*llvmContext);
-}
 
-void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
-    auto kernelType = llvm::StructType::create(*llvmContext, "Kernel");
+    kernelType = llvm::StructType::create(*llvmContext, "Kernel");
     kernelType->setBody({
         irBuilder->getInt8Ty()->getPointerTo(),
         irBuilder->getInt64Ty()
     });
+}
 
+
+// --------------------- TOP LEVEL STATEMENTS --------------------- 
+void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
     for (auto & node : ast) {
         if (node->isFunctionDeclaration()) {
             auto declaration = static_cast<const FunctionDeclarationAST *>(node.get());
@@ -32,7 +35,7 @@ void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
         } else if (node->isFunctionDefinition()) {
             auto definition = static_cast<const FunctionDefinitionAST *>(node.get());
             if (definition->isKernel) {
-                
+                generateKernel(definition);
             } else if (generate(definition) == nullptr) {
                 break;
             }
@@ -47,6 +50,39 @@ void IRGenerator::generate(const std::vector<std::unique_ptr<AST>> & ast) {
     llvmModule->print(llvm::errs(), nullptr);
 }
 
+// --------------------- KERNEL -----------
+void IRGenerator::generateKernel(const FunctionDefinitionAST * definition) {
+    SPIRVGenerator spirvGenerator(program);
+    auto code = spirvGenerator.generate(definition);
+
+    auto i32Type = irBuilder->getInt32Ty();
+    std::vector<llvm::Constant*> values(code.size());
+    for (int i = 0; i < code.size(); i++) {
+        values[i] = llvm::ConstantInt::get(i32Type, code[i]);
+    }
+    
+    auto arrayType = llvm::ArrayType::get(i32Type, code.size());
+
+    auto array = new llvm::GlobalVariable(
+        *llvmModule, arrayType, true, 
+        llvm::GlobalValue::ExternalLinkage, nullptr, "code"
+    );
+    array->setInitializer(llvm::ConstantArray::get(arrayType, values));
+
+    auto name = program.extract(definition->prototype->name);
+    auto kernel = new llvm::GlobalVariable(
+        *llvmModule, kernelType, true,
+        llvm::GlobalValue::ExternalLinkage, nullptr, name
+    );
+    kernel->setInitializer(llvm::ConstantStruct::get(kernelType, {
+        array,
+        llvm::ConstantInt::get(irBuilder->getInt64Ty(), code.size())
+    }));
+
+    globals[name] = kernel;
+}
+
+// --------------------- PRIMITIVE TYPES --------------------- 
 llvm::Type * IRGenerator::generate(Primitive primitive) {
     switch (primitive) {
     case PRIMITIVE_UNIT:
@@ -61,6 +97,8 @@ llvm::Type * IRGenerator::generate(Primitive primitive) {
     return nullptr;
 }
 
+
+// --------------------- TYPES --------------------- 
 llvm::Type * IRGenerator::generate(const TypeAST * type) {
     switch (type->getTypeID()) {
     case TYPE_PRIMITIVE:
@@ -91,6 +129,8 @@ llvm::Type * IRGenerator::generate(const TypeAST * type) {
     }
 }
 
+
+// --------------------- FUNCTION PROTOTYPES --------------------- 
 llvm::Function * IRGenerator::generate(const FunctionPrototypeAST * prototype) {
     std::vector<llvm::Type *> paramTypes;
     for (auto & param : prototype->parameters) {
@@ -119,10 +159,14 @@ llvm::Function * IRGenerator::generate(const FunctionPrototypeAST * prototype) {
     return function;
 }
 
+
+// --------------------- FUNCTION DECLARATIONS --------------------- 
 llvm::Function * IRGenerator::generate(const FunctionDeclarationAST * declaration) {
     return generate(declaration->prototype.get());
 }
 
+
+// --------------------- FUNCTION DEFINITIONS --------------------- 
 llvm::Function * IRGenerator::generate(const FunctionDefinitionAST * definition) {
     std::string name = program.extract(definition->prototype->name);
     llvm::Function * function = llvmModule->getFunction(name);
@@ -167,6 +211,8 @@ llvm::Function * IRGenerator::generate(const FunctionDefinitionAST * definition)
     return function;
 }
 
+
+// --------------------- BODIES --------------------- 
 void IRGenerator::generate(const BodyAST * body) {
     for (auto & statement : body->statements) {
         if (statement->isExpression()) {
@@ -217,6 +263,8 @@ void IRGenerator::generate(const BodyAST * body) {
     }
 }
 
+
+// ---------------------  EXPRESSIONS --------------------- 
 llvm::Value * IRGenerator::generate(const ExpressionAST * expression) {
     switch (expression->getExpressionID()) {
     case EXPRESSION_INT_LITERAL:
@@ -235,8 +283,14 @@ llvm::Value * IRGenerator::generate(const ExpressionAST * expression) {
     {
         auto variable = static_cast<const VariableAST *>(expression);
         auto name = program.extract(variable->text);
-        auto alloc = symbols[name].top();
-        return irBuilder->CreateLoad(alloc->getAllocatedType(), alloc, name.c_str());
+        auto stack = symbols[name];
+        if (stack.size() == 0) {
+            assert(globals.find(name) != globals.end());
+            return globals[name];
+        } else {
+            auto alloc = symbols[name].top();
+            return irBuilder->CreateLoad(alloc->getAllocatedType(), alloc, name.c_str());
+        }
     }
     case EXPRESSION_NOT_OPERATION:
     {

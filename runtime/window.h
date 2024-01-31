@@ -6,6 +6,11 @@
 #include <vector>
 #include <optional>
 
+struct Kernel { 
+    const uint32_t * code;
+    uint64_t size;
+};
+
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
@@ -23,6 +28,9 @@ class VulkanApplication {
 public:
     VulkanApplication(const char * title, uint32_t width, uint32_t height);
     ~VulkanApplication();
+    
+    void createGraphicsPipeline(const Kernel * kernel);
+
     void update();
     bool closed();
 private:
@@ -66,14 +74,13 @@ private:
     void createSwapChain();
     void createImageViews();
     void createRenderPass();
-    void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
     void createCommandBuffer();
     void createSyncObjects();
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-    VkShaderModule createShaderModule(const std::vector<char>& code);
+    VkShaderModule createShaderModule(const uint32_t * code, uint64_t size);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
@@ -90,18 +97,11 @@ struct Window final {
     bool forceQuit;
 };
 
-/*
-struct Kernel { 
-    const uint8_t * code;
-    uint64_t size;
-};
-*/
-
 extern "C" {
 
     Window * createWindow(const char * title, uint32_t width, uint32_t height);
 
-    // void createDemoPipeline(Window * window, Kernel kernel);
+    void setupDemoPipeline(Window * window, const Kernel * kernel);
 
     int update(Window * window);
 
