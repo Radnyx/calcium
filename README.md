@@ -5,7 +5,7 @@ Shared programming language for the CPU and GPU.
 ## Examples
 
 ### Hello World
-```
+```rust
 fun printf(* byte): int;
 
 fun main(): unit {
