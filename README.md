@@ -5,7 +5,7 @@ Shared programming language for the CPU and GPU.
 ## Examples
 
 ### Hello World
-```rust
+```kotlin
 fun printf(* byte): int;
 
 fun main(): unit {
@@ -28,7 +28,7 @@ Hello, world!
 
 ### Shaders
 
-```rust
+```kotlin
 // native definitions from the runtime
 struct Window;
 
