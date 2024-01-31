@@ -352,7 +352,7 @@ void VulkanApplication::createGraphicsPipeline(const Kernel * kernel) {
 
     VkShaderModule fragShaderModule = createShaderModule(
         kernel->code,
-        kernel->size
+        kernel->size * 4
     );
 
     VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
@@ -615,7 +615,7 @@ VkShaderModule VulkanApplication::createShaderModule(const uint32_t * code, uint
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.pCode = code;
-    createInfo.codeSize = size * 4;
+    createInfo.codeSize = size;
 
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
