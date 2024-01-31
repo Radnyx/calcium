@@ -27,7 +27,7 @@ Hello, world!
 
 ### Shaders
 
-```
+```rust
 // native definitions from the runtime
 struct Window;
 
@@ -58,8 +58,6 @@ fun main(): unit {
 
 ## Future Plans
 
-* Emitting `ker` functions as SPIR-V assembly.
-* Supplying kernel as shaders to Vulkan bindings.
-* Executing compute shaders directly. Specifying blocks, threads.
-* Shared constants in CPU and GPU code.
-* Shared memory and shader uniforms. 
+* Executing compute shaders and specifying blocks/threads.
+* Shared compile-time constants in CPU and GPU code.
+* Shared/allocated memory and shader uniforms. 
