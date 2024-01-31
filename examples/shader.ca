@@ -6,7 +6,6 @@
 // SPIR-V bytecode and can be used as a first-class primitive.
 // ---------------------------------------------------------------
 
-// native definitions
 struct Window;
 
 fun createWindow(title: * byte, width: int, height: int): * Window;
