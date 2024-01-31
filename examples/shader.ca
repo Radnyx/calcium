@@ -1,0 +1,32 @@
+// ---------------------------------------------------------------
+// shader.ca - 2024
+// 
+// This demonstrates the ability to write GPU shaders and kernels
+// in the same source file. The kernel function is compiled to 
+// SPIR-V bytecode and can be used as a first-class primitive.
+// ---------------------------------------------------------------
+
+// native definitions
+struct Window;
+
+fun createWindow(title: * byte, width: int, height: int): * Window;
+fun setupDemoPipeline(* Window, * Kernel): unit;
+fun update(* Window): unit;
+fun closed(* Window): bool;
+fun destroyWindow(* Window): unit;
+
+ker fragmentShader(uv: vec2): vec4 {
+    return vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+fun main(): unit {
+    let window: * Window = createWindow("Shader Demo", 800, 600);
+
+    setupDemoPipeline(window, fragmentShader); // pass in compiled kernel
+
+    while (!closed(window)) {
+        update(window);
+    }
+
+    destroyWindow(window);
+}
