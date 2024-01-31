@@ -15,8 +15,9 @@ fun main(): unit {
 
 #### Compilation and execution
 ```bash
-./calcium examples/helloworld.ca 
-clang native/main.cpp examples/helloworld.o -o helloworld
+./build-runtime.sh                # build runtime libraries (stdio, creating a basic window, ...)
+./calcium examples/helloworld.ca  # compile program to .o
+./build-local.sh                  # link program with runtime
 ./helloworld
 ```
 
