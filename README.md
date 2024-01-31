@@ -61,3 +61,4 @@ fun main(): unit {
 * Executing compute shaders and specifying blocks/threads.
 * Shared compile-time constants in CPU and GPU code.
 * Shared/allocated memory and shader uniforms. 
+* Actual semantic analysis.
