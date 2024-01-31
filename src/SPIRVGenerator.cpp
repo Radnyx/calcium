@@ -76,6 +76,22 @@ static void emitString(std::vector<uint32_t> & code) {
     }
 }
 
+template<OpCode opcode, uint32_t... Args>
+static void emit(std::vector<uint32_t> & code) {
+    constexpr uint32_t size = sizeof...(Args);
+    constexpr uint32_t args[size] = { Args... };
+    code.push_back(op(size, opcode));
+    for (uint32_t i = 0; i < size; i++) {
+        code.push_back(args[i]);
+    }
+}
+
+template<OpCode opcode>
+static void emit(std::vector<uint32_t> & code, std::vector<uint32_t> && args) {
+    code.push_back(op(args.size() + 1, opcode));
+    code.insert(code.end(), args.begin(), args.end());
+}
+
 
 SPIRVGenerator::SPIRVGenerator(const Program & program) : program(program) {
     ids = 0;
@@ -93,17 +109,14 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     };
 
     // OpCapability
-    headerSection.push_back(op(2, OP_CAPABILITY));
-    headerSection.push_back(CAP_SHADER);
+    emit<OP_CAPABILITY, CAP_SHADER>(headerSection);
     // OpExtension
     // OpExtInstImport
     headerSection.push_back(op(2 + words(EXTENSION_NAME), OP_EXT_INST_IMPORT));
     headerSection.push_back(requestId());
     emitString<EXTENSION_NAME>(headerSection);
     // OpMemoryModel
-    headerSection.push_back(op(3, OP_MEMORY_MODEL));
-    headerSection.push_back(0); // Logical
-    headerSection.push_back(1); // GLSL450
+    emit<OP_MEMORY_MODEL, 0, 1>(headerSection);
     // OpEntryPoint
     headerSection.push_back(op(4 + words(ENTRY_POINT_NAME), OP_ENTRY_POINT));
     headerSection.push_back(MODEL_FRAGMENT);
@@ -111,9 +124,7 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     emitString<ENTRY_POINT_NAME>(headerSection);
     headerSection.push_back(outputVariable = requestId());
     // OpExecutionMode
-    headerSection.push_back(op(3, OP_EXECUTION_MODE));
-    headerSection.push_back(entryPoint);
-    headerSection.push_back(MODE_ORIGIN_UPPER_LEFT);
+    emit<OP_EXECUTION_MODE>(headerSection, { entryPoint, MODE_ORIGIN_UPPER_LEFT });
     // OpString
     // OpSourceExtension
     // OpSource
@@ -121,55 +132,54 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     // OpName
     // OpMemberName
     // Annotation instructions
-    headerSection.push_back(op(4, OP_DECORATE));
-    headerSection.push_back(outputVariable);
-    headerSection.push_back(DEC_LOCATION);
-    headerSection.push_back(0); // location = 0
+    emit<OP_DECORATE>(headerSection, {
+        outputVariable,
+        DEC_LOCATION,
+        0 // location = 0
+    });
     // Type declarations
-    headerSection.push_back(op(2, OP_TYPE_VOID));
-    headerSection.push_back(voidType = requestId());
-    headerSection.push_back(op(3, OP_TYPE_FUNCTION));
-    headerSection.push_back(entryFunctionType = requestId());
-    headerSection.push_back(voidType);
-    headerSection.push_back(op(3, OP_TYPE_FLOAT));
-    headerSection.push_back(floatType = requestId());
-    headerSection.push_back(32); // bit width
-    headerSection.push_back(op(4, OP_TYPE_VECTOR));
-    headerSection.push_back(vec4Type = requestId());
-    headerSection.push_back(floatType);
-    headerSection.push_back(4); // components
+    emit<OP_TYPE_VOID>(headerSection, { voidType = requestId() });
+    emit<OP_TYPE_FUNCTION>(headerSection, { entryFunctionType = requestId(), voidType });
+    emit<OP_TYPE_FLOAT>(headerSection, { floatType = requestId(), 32 /* bits */ });
+    emit<OP_TYPE_VECTOR>(headerSection, {
+        vec4Type = requestId(),
+        floatType,
+        4 // components
+    });
 
-    spirv_id outputPointerType = requestId();
-    headerSection.push_back(op(4, OP_TYPE_POINTER));
-    headerSection.push_back(outputPointerType);
-    headerSection.push_back(STORE_OUTPUT);
-    headerSection.push_back(vec4Type); // pointer to
+    spirv_id outputPointerType;
+    emit<OP_TYPE_POINTER>(headerSection, {
+        outputPointerType = requestId(),
+        STORE_OUTPUT,
+        vec4Type // pointer to vec4
+    });
 
     // Input/Output variables
-    // TODO: depend on function prototype
-    headerSection.push_back(op(4, OP_VARIABLE));
-    headerSection.push_back(outputPointerType);
-    headerSection.push_back(outputVariable);
-    headerSection.push_back(STORE_OUTPUT);
+    // TODO: generate from function prototype
+    emit<OP_VARIABLE>(headerSection, {
+        outputPointerType,
+        outputVariable,
+        STORE_OUTPUT
+    });
 
     // Global variables
 
     // Function declarations
     
     // Function definitions
-    codeSection.push_back(op(5, OP_FUNCTION));
-    codeSection.push_back(voidType);
-    codeSection.push_back(entryPoint);
-    codeSection.push_back(FUNC_NONE);
-    codeSection.push_back(entryFunctionType);
+    emit<OP_FUNCTION>(codeSection, {
+        voidType,
+        entryPoint,
+        FUNC_NONE,
+        entryFunctionType
+    });
 
-    codeSection.push_back(op(2, OP_LABEL));
-    codeSection.push_back(requestId());
+    emit<OP_LABEL>(codeSection, { requestId() });
 
     generate(definition->body);
 
-    codeSection.push_back(op(1, OP_RETURN));
-    codeSection.push_back(op(1, OP_FUNCTION_END));
+    emit<OP_RETURN>(codeSection);
+    emit<OP_FUNCTION_END>(codeSection);
 
     headerSection[ID_BOUND_INDEX] = ids;
 
@@ -190,10 +200,10 @@ void SPIRVGenerator::generate(const std::unique_ptr<BodyAST> & body) {
     for (auto & statement : body->statements) {
         if (statement->isReturn()) {
             auto returnStatement = reinterpret_cast<const ReturnAST *>(statement.get());
-            spirv_id value = generate(returnStatement->expression);
-            codeSection.push_back(op(3, OP_STORE));
-            codeSection.push_back(outputVariable);
-            codeSection.push_back(value);
+            emit<OP_STORE>(codeSection, {
+                outputVariable, 
+                generate(returnStatement->expression)
+            });
         }
     }
 }
@@ -222,17 +232,14 @@ spirv_id SPIRVGenerator::generate(const std::unique_ptr<ExpressionAST> & express
         case EXPRESSION_FLOAT_LITERAL:
         {
             // TODO: cache re-used constants
-
-            spirv_id id = requestId();
-            auto floatLiteral = reinterpret_cast<const FloatLiteralAST *>(expression.get());
-            constantSection.push_back(op(4, OP_CONSTANT));
-            constantSection.push_back(floatType);
-            constantSection.push_back(id);
-
             static_assert(sizeof(float) == sizeof(uint32_t)); // TODO: support other sizes
+
+            auto floatLiteral = reinterpret_cast<const FloatLiteralAST *>(expression.get());
             float value = std::stof(program.extract(floatLiteral->text));
             const uint32_t * data = reinterpret_cast<const uint32_t *>(&value);
-            constantSection.push_back(*data);
+
+            spirv_id id = requestId();
+            emit<OP_CONSTANT>(constantSection, { floatType, id, *data });
 
             return id;
         }
