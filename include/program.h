@@ -1,6 +1,6 @@
 #ifndef PROGRAM_H
 #define PROGRAM_H
-#include "lexer.h"
+#include "Lexer.h"
 
 class Program {
 public:

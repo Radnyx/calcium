@@ -1,4 +1,4 @@
-#include "../include/program.h"
+#include "../include/Program.h"
 
 Program::Program(std::string & text) : text(text) {}
 

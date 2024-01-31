@@ -4,41 +4,39 @@
 #include <vector>
 #include <cassert>
 
-#include "../include/parser.h"
-#include "../include/irgenerator.h"
-#include "../include/writer.h"
+#include "../include/Parser.h"
+#include "../include/IRGenerator.h"
+#include "../include/Writer.h"
+
+#include <vulkan/vulkan.h>
 
 /*
 compile/link in one go: https://discourse.llvm.org/t/compile-to-native/62196/3
 
-SIMPLE HELLO WORLD
-
-fun printf(* byte): int;
-
-fun main(): unit {
-    let text: * byte = "hello world"; // stored globally, referenced here
-    printf(text);
-}
-
 GRAPHICS HELLO WORLD
+
+Vulkan compute:
+- https://www.neilhenning.dev/posts/a-simple-vulkan-compute-example/
+- https://vulkan-tutorial.com/Compute_Shader
 
 TODO: read https://github.com/KhronosGroup/SPIRV-Guide/tree/master
 
 Refer to https://github.com/KhronosGroup/SPIRV-Tools/blob/main/docs/syntax.md
 For an API to generate and assembling SPIR-V code.
 
-Follow up on this: https://community.khronos.org/t/is-there-an-api-for-generating-spir-v-assembly/110472
-
 */
 
-
 int main(int argc, char* argv[]) {
+#ifdef _DEBUG
+    std::string filename = "../../examples/shader.ca";
+#else
     if (argc != 2) {
         std::cerr << "ERR: expected 1 argument, e,g. calcium main.ca" << std::endl;
         return 1;
     }
-
     std::string filename = argv[1];
+#endif
+
     std::ifstream stream(filename);
     if (!stream) {
         std::cerr << "ERR: could not find file " << filename << std::endl;
@@ -61,17 +59,12 @@ int main(int argc, char* argv[]) {
 
     // ============ PARSER ============
     
-    Parser parser(tokens);
+    Parser parser(program, tokens);
 
     std::vector<std::unique_ptr<AST>> ast;
     err = parser.parse(ast);
 
     if (err != ERR_NONE) {
-        if (!parser.eof()) {
-            auto tok = parser.get();
-            std::cerr << "ERR: line " << tok.line << ", column " << tok.column << std::endl;
-        }
-
         return err;
     }
 

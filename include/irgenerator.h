@@ -1,12 +1,14 @@
 #ifndef IR_GENERATOR_H
 #define IR_GENERATOR_H
 #include <memory>
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <stack>
-#include "llvm/IR/Module.h"
-#include "llvm/IR/IRBuilder.h"
-#include "ast.h"
-#include "program.h"
+#include <llvm/IR/Module.h>
+#include <llvm/IR/IRBuilder.h>
+#include "llvm/IR/Instructions.h"
+#include "AST.h"
+#include "Program.h"
 
 class IRGenerator {
 public:
@@ -23,13 +25,18 @@ public:
     const std::shared_ptr<llvm::LLVMContext> llvmContext;
     const std::shared_ptr<llvm::Module> llvmModule;
     std::unique_ptr<llvm::IRBuilder<>> irBuilder;
-    std::map<std::string, std::stack<llvm::Value *>> symbols;
+    std::unordered_map<std::string, std::stack<llvm::AllocaInst *>> symbols;
+    std::unordered_map<std::string, llvm::Value *> globals;
+    std::unordered_set<std::string> incompleteStructs; 
+
+    llvm::StructType * kernelType;
 
     llvm::Type * generate(Primitive primitive);
     llvm::Type * generate(const TypeAST * type);
     llvm::Function * generate(const FunctionPrototypeAST * prototype);
     llvm::Function * generate(const FunctionDeclarationAST * declaration);
     llvm::Function * generate(const FunctionDefinitionAST * definition);
+    void generateKernel(const FunctionDefinitionAST * definition);
     void generate(const BodyAST * body);
     llvm::Value * generate(const ExpressionAST * expression);
 };

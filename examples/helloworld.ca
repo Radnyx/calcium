@@ -1,5 +1,5 @@
 fun printf(* byte): int;
 
-fun init(): unit {
+fun main(): unit {
     printf("Hello, world!");
 }

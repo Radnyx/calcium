@@ -1,7 +1,17 @@
-#include "../include/lexer.h"
+#include "../include/Lexer.h"
 #include <cassert>
 
-Token::Token() : type(NULL_TOKEN) {}
+static std::string takeExample(const std::string & text, size_t index) {
+    size_t exampleLength = std::min(20ull, text.size() - index);
+    auto example = text.substr(index, exampleLength);
+    auto newLineIndex = example.find("\n");
+    if (newLineIndex != std::string::npos) {
+        example = example.substr(0, newLineIndex);
+    }
+    return example;
+}
+
+Token::Token() : type(TOK_NULL) {}
 
 Lexer::Lexer(const std::string & program) : program(program) {
     index = 0;
@@ -54,7 +64,7 @@ bool Lexer::readIdentifier(Token * const token) {
     if (eof()) return false;
     if (!isalpha(get())) return false;
 
-    token->type = IDENTIFIER;
+    token->type = TOK_IDENTIFIER;
     token->startIndex = index;
     token->line = line;
     token->column = column;
@@ -66,31 +76,99 @@ bool Lexer::readIdentifier(Token * const token) {
     return true;
 }
 
+bool Lexer::readFloatLiteral(Token * const token) {
+    assert(token != nullptr);
+
+    if (eof()) return false;
+
+    size_t startIndex = index;
+
+    char c;
+    while (!eof() && isdigit(c = get())) {
+        advance();
+    }
+
+    if (c != '.') {
+        rewind(startIndex);
+        return false;
+    }
+
+    advance();
+    while (!eof() && isdigit(c = get())) {
+        advance();
+    }
+
+    // check if no digits
+    if (index == startIndex + 1) {
+        rewind(startIndex);
+        return false;
+    }
+
+    token->type = TOK_FLOAT_LITERAL;
+    token->startIndex = startIndex;
+    token->line = line;
+    token->column = column;
+    token->endIndex = index;
+    
+    return true;
+}
+
+bool Lexer::readIntLiteral(Token * const token) {
+    assert(token != nullptr);
+
+    if (eof()) return false;
+    if (!isdigit(get())) return false;
+
+    token->startIndex = index;
+
+    char c;
+    while (!eof() && isdigit(c = get())) {
+        advance();
+    }
+
+    token->type = TOK_INT_LITERAL;
+    token->line = line;
+    token->column = column;
+    token->endIndex = index;
+    
+    return true;
+}
+
 bool Lexer::readStringLiteral(Token * const token) {
     assert(token != nullptr);
 
     if (eof()) return false;
     if (get() != '"') return false;
 
-    int startIndex = index;
+    size_t startIndex = index;
     advance();
 
-    token->type = STRING_LITERAL;
-    token->startIndex = index;
-    token->line = line;
-    token->column = column;
+    if (eof()) {
+        rewind(startIndex);
+        return false;
+    }
 
     char c;
     while ((c = get()) != '"') {
         if (c == '\n') {
-            index = startIndex;
+            rewind(startIndex);
             return false;
         }
         advance();
-    }
 
+        if (eof()) {
+            rewind(startIndex);
+            return false;
+        }
+    }
+    
+    advance(); // '"'
+
+    token->type = TOK_STRING_LITERAL;
+    token->startIndex = startIndex;
     token->endIndex = index;
-    advance();
+    token->line = line;
+    token->column = column;
 
     return true;
 }
@@ -98,25 +176,34 @@ bool Lexer::readStringLiteral(Token * const token) {
 bool Lexer::readExact(Token * const token, TokenType type, const std::string & str) {
     assert(token != nullptr);
     
-    int startIndex = index;
-
-    token->type = type;
-    token->startIndex = startIndex;
-    token->line = line;
-    token->column = column;
+    size_t startIndex = index;
 
     for (char c : str) {
         if (eof() || c != get()) {
-            index = startIndex;
+            rewind(startIndex);
             return false;
         }
 
         advance();
     }
 
+    token->type = type;
+    token->startIndex = startIndex;
+    token->line = line;
+    token->column = column;
     token->endIndex = index;
 
     return true;
+}
+
+void Lexer::rewind(size_t oldIndex) {
+    assert(oldIndex <= index);
+
+    // TODO: doesn't support "tokens" across multiple lines
+    size_t difference = index - oldIndex;
+    column -= difference;
+
+    index = oldIndex;
 }
 
 Error Lexer::tokenize(std::vector<Token> & tokens) {
@@ -126,24 +213,39 @@ Error Lexer::tokenize(std::vector<Token> & tokens) {
         Token token;
 
         bool success = 
-            readExact(&token, FUN, "fun") || 
-            readExact(&token, UNIT, "unit") || 
-            readExact(&token, INT, "int") || 
-            readExact(&token, BYTE, "byte") || 
-            readExact(&token, STAR, "*") || 
-            readExact(&token, OPEN_PAREN, "(") || 
-            readExact(&token, CLOSE_PAREN, ")") || 
-            readExact(&token, OPEN_BRACE, "{") || 
-            readExact(&token, CLOSE_BRACE, "}") || 
-            readExact(&token, COMMA, ",") || 
-            readExact(&token, COLON, ":") || 
-            readExact(&token, SEMICOLON, ";") || 
-            readExact(&token, EQUALS, "=") || 
+            readExact(&token, TOK_FUN, "fun") || 
+            readExact(&token, TOK_KER, "ker") || 
+            // readExact(&token, KERNEL, "Kernel") || 
+            readExact(&token, TOK_STRUCT, "struct") || 
+            readExact(&token, TOK_UNIT, "unit") || 
+            readExact(&token, TOK_INT, "int") || 
+            readExact(&token, TOK_BYTE, "byte") || 
+            readExact(&token, TOK_BOOL, "bool") || 
+            // readExact(&token, VEC2, "vec2") || 
+            // readExact(&token, VEC4, "vec4") || 
+            readExact(&token, TOK_LET, "let") || 
+            readExact(&token, TOK_WHILE, "while") || 
+            readExact(&token, TOK_RETURN, "return") || 
+            readExact(&token, TOK_STAR, "*") || 
+            readExact(&token, TOK_OPEN_PAREN, "(") || 
+            readExact(&token, TOK_CLOSE_PAREN, ")") || 
+            readExact(&token, TOK_OPEN_BRACE, "{") || 
+            readExact(&token, TOK_CLOSE_BRACE, "}") || 
+            readExact(&token, TOK_COMMA, ",") || 
+            readExact(&token, TOK_COLON, ":") || 
+            readExact(&token, TOK_SEMICOLON, ";") || 
+            readExact(&token, TOK_EQUALS, "=") || 
+            readExact(&token, TOK_NOT, "!") || 
+            readExact(&token, TOK_MINUS, "-") || 
             readIdentifier(&token) || 
+            readFloatLiteral(&token) ||
+            readIntLiteral(&token) ||
             readStringLiteral(&token);
 
         if (!success) {
-            std::cerr << "ERR: invalid token at line " << line << ", column " << column << std::endl;
+            auto example = takeExample(program, index);
+            std::cerr << "ERR: invalid token at line " << line << 
+                ", column " << column << ": \"" << example << "\"" << std::endl;
             return ERR_INVALID_TOKEN;
         }
 

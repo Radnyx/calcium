@@ -2,22 +2,28 @@
 #define AST_H
 #include <memory>
 #include <optional>
-#include "lexer.h"
+#include "Lexer.h"
 
 enum Primitive {
     PRIMITIVE_UNIT,
     PRIMITIVE_INT,
-    PRIMITIVE_BYTE
+    PRIMITIVE_BYTE,
+    PRIMITIVE_BOOL
 };
 
 enum TypeID {
     TYPE_PRIMITIVE,
-    TYPE_POINTER
+    TYPE_POINTER,
+    TYPE_STRUCT
 };
 
 enum ExpressionID {
+    EXPRESSION_VARIABLE,
+    EXPRESSION_INT_LITERAL,
+    EXPRESSION_FLOAT_LITERAL,
     EXPRESSION_STRING_LITERAL,
-    EXPRESSION_FUNCTION_CALL
+    EXPRESSION_FUNCTION_CALL,
+    EXPRESSION_NOT_OPERATION,
 };
 
 class AST {
@@ -26,6 +32,10 @@ public:
     virtual bool isExpression() const;
     virtual bool isFunctionDeclaration() const;
     virtual bool isFunctionDefinition() const;
+    virtual bool isIncompleteStruct() const;
+    virtual bool isVariableDefinition() const;
+    virtual bool isWhileLoop() const;
+    virtual bool isReturn() const;
 };
 
 class BodyAST {
@@ -53,6 +63,14 @@ public:
     const std::unique_ptr<TypeAST> type;
     TypeID getTypeID() const;
 };
+
+class StructTypeAST : public TypeAST {
+public:
+    StructTypeAST(Token name);
+    const Token name;
+    TypeID getTypeID() const;
+};
+
 
 struct Parameter {
     Parameter() = default;
@@ -82,18 +100,50 @@ public:
 
 class FunctionDefinitionAST : public AST {
 public:
-    FunctionDefinitionAST(std::unique_ptr<FunctionPrototypeAST> & prototype, std::unique_ptr<BodyAST> & body);
+    FunctionDefinitionAST(
+        std::unique_ptr<FunctionPrototypeAST> & prototype, 
+        std::unique_ptr<BodyAST> & body,
+        bool isKernel = false
+    );
     const std::unique_ptr<FunctionPrototypeAST> prototype; 
-    const std::unique_ptr<BodyAST> body; 
+    const std::unique_ptr<BodyAST> body;
+    const bool isKernel;
     bool isFunctionDefinition() const;
 };
 
-class VariableDefinitionAST : public AST {};
+class IncompleteStructAST : public AST {
+public:
+    IncompleteStructAST(Token name);
+    const Token name;
+    bool isIncompleteStruct() const;
+};
+
 
 class ExpressionAST : public AST {
 public:
     bool isExpression() const;
     virtual ExpressionID getExpressionID() const = 0;
+};
+
+class VariableAST : public ExpressionAST {
+public:
+    VariableAST(Token text);
+    const Token text;
+    ExpressionID getExpressionID() const;
+};
+
+class IntLiteralAST : public ExpressionAST {
+public:
+    IntLiteralAST(Token text);
+    const Token text;
+    ExpressionID getExpressionID() const;
+};
+
+class FloatLiteralAST : public ExpressionAST {
+public:
+    FloatLiteralAST(Token text);
+    const Token text;
+    ExpressionID getExpressionID() const;
 };
 
 class StringLiteralAST : public ExpressionAST {
@@ -109,6 +159,37 @@ public:
     const Token name;
     const std::vector<std::unique_ptr<ExpressionAST>> arguments;
     ExpressionID getExpressionID() const;
+};
+
+class NotOperationAST : public ExpressionAST {
+public:
+    NotOperationAST(std::unique_ptr<ExpressionAST> & expression);
+    const std::unique_ptr<ExpressionAST> expression;
+    ExpressionID getExpressionID() const;
+};
+
+class VariableDefinitionAST : public AST {
+public:
+    VariableDefinitionAST(Token name, std::unique_ptr<TypeAST> & type, std::unique_ptr<ExpressionAST> & expression);
+    const Token name;
+    const std::unique_ptr<TypeAST> type;
+    const std::unique_ptr<ExpressionAST> expression;
+    bool isVariableDefinition() const;
+};
+
+class WhileLoopAST : public AST {
+public:
+    WhileLoopAST(std::unique_ptr<ExpressionAST> & condition, std::unique_ptr<BodyAST> & body);
+    const std::unique_ptr<ExpressionAST> condition;
+    const std::unique_ptr<BodyAST> body;
+    bool isWhileLoop() const;
+};
+
+class ReturnAST : public AST {
+public:
+    ReturnAST(std::unique_ptr<ExpressionAST> & expression);
+    const std::unique_ptr<ExpressionAST> expression;
+    bool isReturn() const;
 };
 
 #endif // AST_H
