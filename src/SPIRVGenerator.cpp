@@ -3,8 +3,8 @@
 #include <string>
 #include <fstream>
 
-const char * ENTRY_POINT_NAME = "main";
-const char * EXTENSION_NAME = "GLSL.std.450";
+constexpr char ENTRY_POINT_NAME[] = "main";
+constexpr char EXTENSION_NAME[] = "GLSL.std.450";
 
 const size_t ID_BOUND_INDEX = 3;
 
@@ -26,7 +26,7 @@ enum OpCode {
     OP_STORE = 62,
     OP_DECORATE = 71,
     OP_COMPOSITE_CONSTRUCT = 80,
-    OP_LABEL = 249,
+    OP_LABEL = 248,
     OP_RETURN = 253
 };
 
@@ -50,7 +50,7 @@ enum StorageClass {
     STORE_OUTPUT = 3
 };
 
-enum FunctionContrl {
+enum FunctionControl {
     FUNC_NONE = 0  
 };
 
@@ -59,19 +59,19 @@ static constexpr uint32_t op(uint32_t wordCount, OpCode code) {
 }
 
 static constexpr uint32_t words(const char * s) {
-    return (std::char_traits<char>::length(s) + 1) / 4;
+    return std::char_traits<char>::length(s) / 4 + 1;
 }
 
-
-static void emitString(std::vector<uint32_t> & code, const std::string & str) {
-    size_t wordCount = (str.size() + 1) / 4;
-    for (size_t wordIndex = 0; wordIndex < wordCount; wordIndex++) {
+template<const char * s>
+static void emitString(std::vector<uint32_t> & code) {
+    constexpr auto length = std::char_traits<char>::length(s);
+    for (size_t wordIndex = 0; wordIndex < words(s); wordIndex++) {
         uint32_t word = 0x00000000;
         size_t i = wordIndex * 4;
-        if (i + 0 < str.size()) word |= str[i + 0];
-        if (i + 1 < str.size()) word |= str[i + 1] << 8;
-        if (i + 2 < str.size()) word |= str[i + 2] << 16;
-        if (i + 3 < str.size()) word |= str[i + 3] << 24;    
+        if (i + 0 < length) word |= s[i + 0];
+        if (i + 1 < length) word |= s[i + 1] << 8;
+        if (i + 2 < length) word |= s[i + 2] << 16;
+        if (i + 3 < length) word |= s[i + 3] << 24;    
         code.push_back(word);
     }
 }
@@ -99,7 +99,7 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     // OpExtInstImport
     headerSection.push_back(op(2 + words(EXTENSION_NAME), OP_EXT_INST_IMPORT));
     headerSection.push_back(requestId());
-    emitString(headerSection, EXTENSION_NAME);
+    emitString<EXTENSION_NAME>(headerSection);
     // OpMemoryModel
     headerSection.push_back(op(3, OP_MEMORY_MODEL));
     headerSection.push_back(0); // Logical
@@ -108,7 +108,7 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     headerSection.push_back(op(4 + words(ENTRY_POINT_NAME), OP_ENTRY_POINT));
     headerSection.push_back(MODEL_FRAGMENT);
     headerSection.push_back(entryPoint = requestId());
-    emitString(headerSection, ENTRY_POINT_NAME);
+    emitString<ENTRY_POINT_NAME>(headerSection);
     headerSection.push_back(outputVariable = requestId());
     // OpExecutionMode
     headerSection.push_back(op(3, OP_EXECUTION_MODE));
@@ -148,8 +148,8 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     // Input/Output variables
     // TODO: depend on function prototype
     headerSection.push_back(op(4, OP_VARIABLE));
-    headerSection.push_back(outputVariable);
     headerSection.push_back(outputPointerType);
+    headerSection.push_back(outputVariable);
     headerSection.push_back(STORE_OUTPUT);
 
     // Global variables
@@ -158,8 +158,8 @@ std::vector<uint32_t> SPIRVGenerator::generate(const FunctionDefinitionAST * def
     
     // Function definitions
     codeSection.push_back(op(5, OP_FUNCTION));
-    codeSection.push_back(entryPoint);
     codeSection.push_back(voidType);
+    codeSection.push_back(entryPoint);
     codeSection.push_back(FUNC_NONE);
     codeSection.push_back(entryFunctionType);
 
@@ -210,8 +210,8 @@ spirv_id SPIRVGenerator::generate(const std::unique_ptr<ExpressionAST> & express
 
             spirv_id id = requestId();
             codeSection.push_back(op(7, OP_COMPOSITE_CONSTRUCT));
-            codeSection.push_back(id);
             codeSection.push_back(vec4Type);
+            codeSection.push_back(id);
             
             for (auto & arg : functionCall->arguments) {
                 codeSection.push_back(generate(arg));
@@ -221,14 +221,16 @@ spirv_id SPIRVGenerator::generate(const std::unique_ptr<ExpressionAST> & express
         }
         case EXPRESSION_FLOAT_LITERAL:
         {
+            // TODO: cache re-used constants
+
             spirv_id id = requestId();
             auto floatLiteral = reinterpret_cast<const FloatLiteralAST *>(expression.get());
-            float value = std::stof(program.extract(floatLiteral->text));
-            constantSection.push_back(op(3, OP_CONSTANT));
-            // TODO: cache re-used constants
+            constantSection.push_back(op(4, OP_CONSTANT));
             constantSection.push_back(floatType);
+            constantSection.push_back(id);
 
             static_assert(sizeof(float) == sizeof(uint32_t)); // TODO: support other sizes
+            float value = std::stof(program.extract(floatLiteral->text));
             const uint32_t * data = reinterpret_cast<const uint32_t *>(&value);
             constantSection.push_back(*data);
 
