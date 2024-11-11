@@ -106,11 +106,13 @@ private:
     template<OpCode opcode, uint32_t... Args>
     void emit() {
         auto & code = section<opcode>();
-        constexpr size_t size = sizeof...(Args);
-        constexpr uint32_t args[size] = { Args... };
+        const size_t size = sizeof...(Args);
         code.push_back(op(size + 1, opcode));
-        for (size_t i = 0; i < size; i++) {
-            code.push_back(args[i]);
+        if constexpr (size > 0) {
+            uint32_t args[size] = { Args... };
+            for (size_t i = 0; i < size; i++) {
+                code.push_back(args[i]);
+            }
         }
     }
 
