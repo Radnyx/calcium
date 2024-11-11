@@ -1,4 +1,6 @@
 // ---------------------------------------------------------------
+// POC for my programming language for CPU and GPU.
+//
 // shader.ca - 2024
 // 
 // This demonstrates the ability to write GPU shaders and kernels
@@ -6,6 +8,7 @@
 // SPIR-V bytecode and can be used as a first-class primitive.
 // ---------------------------------------------------------------
 
+// native definitions from the runtime
 struct Window;
 
 fun createWindow(title: * byte, width: int, height: int): * Window;
@@ -14,8 +17,9 @@ fun update(* Window): unit;
 fun closed(* Window): bool;
 fun destroyWindow(* Window): unit;
 
+// kernel/shader compiled to SPIR-V bytecode
 ker fragmentShader(uv: vec2): vec4 {
-    return vec4(1.0, 0.0, 0.0, 1.0);
+    return vec4(0.623, 0.482, 0.929, 1.0);
 }
 
 fun main(): unit {
